@@ -36,3 +36,8 @@ Tests not run and why:
 - [ ] No secrets, credentials, recovery material, or plaintext user data included
 - [ ] AI-generated changes reviewed and understood by a human
 - [ ] No security checks or CI controls weakened
+
+## Commit history
+- [ ] Commit headers follow docs/development/COMMIT_CONVENTIONS.md.
+- [ ] Each retained commit is a coherent unit suitable for the main branch.
+- [ ] No WIP, fixup, known-broken, or unrelated commit is retained merely to preserve history.
