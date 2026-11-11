@@ -7,9 +7,10 @@ This is the entry point for engineers and AI agents contributing to ARK.
 1. Read AGENTS.md for mandatory engineering and AI-agent rules.
 2. Read docs/README.md for the documentation map and decision status.
 3. Read docs/architecture/ARCHITECTURE.md for subsystem boundaries.
-4. Read docs/architecture/SECURITY_INVARIANTS.md and docs/security/THREAT_MODEL.md.
-5. Read the relevant subsystem specification and ADRs.
-6. Inspect current code and tests; documentation describes intent and may be ahead of implementation.
+4. Read docs/architecture/CRATE_BOUNDARIES_AND_DEPENDENCIES.md before adding a crate or dependency.
+5. Read docs/architecture/SECURITY_INVARIANTS.md and docs/security/THREAT_MODEL.md.
+6. Read the relevant subsystem specification and ADRs.
+7. Inspect current code and tests; documentation describes intent and may be ahead of implementation.
 
 ## Development principles
 
@@ -25,7 +26,9 @@ This is the entry point for engineers and AI agents contributing to ARK.
 
 ## Current implementation status
 
-The repository is in the architecture/foundation stage. The specifications define target behavior; they do not imply that the corresponding Rust crates, runtime, VFS, package format, GUI, or security controls have already been implemented. Check the actual source tree and CI before making claims.
+The repository now contains a minimal Rust Cargo workspace and the platform-independent ark-core foundation. The core defines typed domain identifiers, runtime-mode vocabulary, independent version-domain types, and a sanitized shared error taxonomy.
+
+No runtime engine, cryptographic engine, encrypted storage, identity/session/policy/broker service, filesystem mediation backend, package/recovery engine, GUI, or installer is implemented yet. The specifications define target behavior; they do not imply that those controls exist.
 
 ## Required engineering loop
 
