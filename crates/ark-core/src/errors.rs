@@ -60,7 +60,6 @@ pub struct ArkError {
 
 impl ArkError {
     /// Creates a sanitized error from a fixed classification code.
-    #[must_use]
     pub const fn new(code: ErrorCode) -> Self {
         Self { code }
     }

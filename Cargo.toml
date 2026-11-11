@@ -13,7 +13,7 @@ repository = "https://github.com/RhinoGuard/ARK"
 unsafe_code = "forbid"
 missing_docs = "deny"
 unused_must_use = "deny"
-rust_2018_idioms = "deny"
+rust_2018_idioms = { level = "deny", priority = -1 }
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
