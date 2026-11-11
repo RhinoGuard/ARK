@@ -110,10 +110,7 @@ mod tests {
     fn identifier_display_is_fixed_width_lowercase_hex() {
         let identifier = WorkspaceId::from_bytes([0xab; WorkspaceId::WIDTH]);
 
-        assert_eq!(
-            identifier.to_string(),
-            "abababababababababababababababab"
-        );
+        assert_eq!(identifier.to_string(), "abababababababababababababababab");
         assert_eq!(
             format!("{identifier:?}"),
             "WorkspaceId(abababababababababababababababab)"

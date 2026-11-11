@@ -23,6 +23,7 @@ Keep the summary at or below 72 characters. Use lowercase type and scope names. 
 | refactor | Restructure code without changing intended behavior |
 | perf | Improve performance without weakening security |
 | test | Add or change tests |
+| style | Formatting or non-semantic style changes |
 | docs | Documentation-only changes |
 | build | Build system, Cargo workspace, or toolchain changes |
 | ci | Continuous integration and validation automation |

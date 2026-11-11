@@ -16,7 +16,7 @@ if [[ -z "${commit_shas}" ]]; then
     exit 0
 fi
 
-pattern='^(feat|fix|refactor|perf|test|docs|build|ci|chore|revert|security)(\([a-z0-9][a-z0-9._/-]*\))?!?: .{1,72}$'
+pattern='^(feat|fix|refactor|perf|test|style|docs|build|ci|chore|revert|security)(\([a-z0-9][a-z0-9._/-]*\))?!?: .{1,72}$'
 failed=0
 
 while IFS= read -r commit_sha; do
