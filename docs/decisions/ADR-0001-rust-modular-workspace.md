@@ -1,33 +1,24 @@
-# ADR-0001: Rust Modular Workspace and Cross-Platform Strategy
+# ADR-0001: Rust Modular Workspace
 
-Status: Accepted
+- **Status:** Accepted (architectural direction)
+- **Decision scope:** Primary implementation language and module organization
+- **Implementation status:** Not yet implemented
 
 ## Context
-
-ARK needs a maintainable security-sensitive core across Windows, Linux, and macOS. Platform-specific process identity and filesystem enforcement differ substantially.
+ARK requires cryptographic storage, platform-specific process/filesystem mechanisms, runtime mediation, and desktop/CLI workflows. These concerns need explicit boundaries while remaining feasible for a small experienced team.
 
 ## Decision
-
-Use Rust as the primary language and a modular Cargo workspace. Keep domain logic and contracts platform-independent. Place OS-specific implementations behind narrow backend interfaces. Start in-process and split into separate processes only when a concrete security, reliability, or privilege boundary justifies it.
-
-Platform implementation order: Windows, Linux, macOS.
-
-## Alternatives
-
-- Separate services/microservices from the start: rejected as premature complexity for a three-person team.
-- One monolithic crate: rejected because it obscures responsibility and makes independent testing/review harder.
-- Separate implementation per OS: rejected because it duplicates domain and storage logic.
+Use Rust as the primary implementation language and a modular Cargo workspace with platform-specific backends. Start with a small number of meaningful crates. Introduce separate processes only where they create a measurable security, reliability, or privilege boundary.
 
 ## Consequences
+- Shared domain contracts and typed errors can be reused.
+- Platform-specific mechanisms remain isolated.
+- Dependency direction must remain acyclic.
+- A modular workspace is not a justification for empty placeholder crates or unnecessary microservices.
+- The exact initial crate set and dependency graph are implementation tasks.
 
-- Dependency direction and crate ownership must be documented.
-- Avoid cyclic dependencies and premature empty crates.
-- OS backends require platform-specific tests and compatibility notes.
+## Constraints
+Core domain must not depend on UI or concrete OS backends. Policy must not depend on UI. Runtime must not bypass policy/broker. Platform adapters do not own product authorization policy.
 
-## Security implications
-
-Core must not trust UI or platform-specific paths. Platform identity evidence must be normalized without losing the evidence required for authorization.
-
-## Validation
-
-Cargo dependency graph checks, cross-target compile checks where available, and platform backend tests.
+## Verification
+Review the Cargo dependency graph, enforce formatting/lints/tests in CI, and document every exception to dependency boundaries.
