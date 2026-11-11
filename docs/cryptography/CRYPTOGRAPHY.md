@@ -1,73 +1,48 @@
-# ARK Cryptography Specification
+# Cryptography Design
 
-Status: Selected primitive families are ACCEPTED directionally. Exact library, version, feature set, parameters, wire format, nonce allocation, and misuse analysis remain implementation gates.
+**Status:** Design baseline. Exact wire/storage protocol, crate versions, parameters, and key lifecycle APIs require dedicated ADRs and review before implementation.
 
-## 1. Rules
+## Approved direction
+- Authenticated encryption: XChaCha20-Poly1305.
+- Password-based key derivation: Argon2id.
+- Domain-separated key derivation: HKDF-SHA-256.
+- Random keys/nonces/tokens: operating-system CSPRNG through a reviewed Rust abstraction.
+- Use maintained, reviewed libraries. Do not design proprietary algorithms.
 
-- Use established, reviewed cryptographic constructions and maintained libraries.
-- Do not invent an encryption algorithm, KDF, MAC, stream construction, or key exchange.
-- Separate keys by purpose and context.
-- Use the operating system CSPRNG for key and salt generation.
-- Authenticate encrypted content and security-critical metadata.
-- Treat key lifecycle, nonce lifecycle, backup, rotation, crash, clone, and restore as part of the cryptographic design.
-- Cryptographic APIs must make unsafe states difficult to express.
+## Key hierarchy
+Intended conceptual hierarchy:
+```
+Password
+  └─ Argon2id → KEK
+       └─ unwrap Workspace Master Key
+            └─ derive/wrap Project Key
+                 └─ derive per-file key
+```
+Password is not used directly as a file-encryption key. Domain separation and context binding must be specified. Password rotation normally changes a key wrapper and need not re-encrypt all data; data-key rotation is a separate operation.
 
-## 2. Selected primitive families
+## Nonces and AAD
+Nonce uniqueness under a given key is mandatory. The construction, allocation/persistence strategy, and behavior across crash/restore/fork/concurrency must be specified before code. AAD should bind ciphertext to its context, such as format version, workspace/file identity, chunk index, and relevant generation. Authenticate headers and metadata that influence interpretation.
 
-- XChaCha20-Poly1305 for authenticated encryption with associated data, subject to library suitability and reviewed nonce strategy.
-- Argon2id for password-based key derivation.
-- HKDF-SHA-256 for context-separated derivation from high-entropy key material.
-- OS-provided CSPRNG for random keys, salts, identifiers where appropriate, and recovery material.
+## Chunked/streaming encryption
+Use a reviewed streaming AEAD construction or established library format. Do not assume that independently encrypting arbitrary chunks is sufficient. Specify and test:
+- Unique nonce per chunk/key.
+- Authenticated chunk index, file identity, generation, and relevant metadata.
+- Order, missing chunk, duplicate chunk, truncation, extension, and resize detection.
+- Header/manifest authentication.
+- Concurrent writers and key/nonce allocation.
+- Atomic metadata updates and crash recovery.
+- Rollback detection strategy.
 
-Do not substitute primitives or parameter sets without an ADR and review.
+AEAD authenticity alone does not prevent rollback to an older valid ciphertext set. A trusted generation reference or other anti-rollback mechanism is required if rollback resistance is a product requirement.
 
-## 3. Key hierarchy direction
+## Key handling
+Keep key material scoped and short-lived where practical. Use zeroization helpers where appropriate, while acknowledging that copies may exist and guaranteed removal from RAM cannot generally be promised. Never log or serialize raw master keys.
 
-Workspace password -> Argon2id with unique salt and versioned parameters -> KEK -> unwrap random Workspace Master Key -> derive or unwrap scoped Project/File keys using a reviewed hierarchy and HKDF context labels.
+## Password and recovery
+Recovery Key is a random independent 256-bit secret per Workspace. It is not the account password and is not stored raw on a server. Recovery File contains authenticated wrapped key material and required metadata, not a raw master key. Trusted Devices use device-specific private keys and proof of possession.
 
-Password is not the file-encryption key. Password rotation should normally rewrap the relevant random key rather than re-encrypt every file, unless a separate data-key rotation is required.
+## Portable package
+Each package has a random independent Package Key. A package-specific password derives a KEK using Argon2id, which wraps the Package Key. Package password differs from the Workspace password. Rewrapping a Package Key can change package password without re-encrypting every data object, subject to format design.
 
-Recovery Key, Recovery File, Trusted Device, and Portable Package each have explicitly separated wrappers/credentials and scoped key-release paths. Do not store raw master keys in recovery/package files.
-
-## 4. Chunked authenticated storage
-
-Random-access chunk encryption is required for large files and frequent small edits. The final construction must define:
-- chunk size and alignment;
-- file identity and generation binding;
-- chunk index and length binding;
-- AAD fields and canonical encoding;
-- nonce uniqueness per key across concurrent writes, crashes, restore, clone, and rollback;
-- authenticated header/manifest;
-- truncation, reordering, duplication, substitution, and stale-chunk detection;
-- atomic metadata/index publication;
-- version and algorithm-suite identifiers.
-
-A plain loop that independently encrypts arbitrary chunks is not automatically a safe storage protocol. Select or adapt a reviewed streaming/chunked AEAD design and document its security argument. Do not release plaintext from a chunk until its authentication tag verifies.
-
-## 5. Nonce and key lifecycle
-
-Nonce uniqueness is a hard invariant. Random nonces alone require a carefully analyzed collision bound and key usage limit; counters require durable atomic allocation and rollback/clone handling. The exact strategy is OPEN until the chosen library/construction and storage transaction model are evaluated.
-
-A key must not be reused across independent workspaces, files, packages, or purposes without a documented derivation scheme. Use explicit context labels and domain separation.
-
-## 6. Password and package credentials
-
-Use Argon2id with unique salt and versioned parameters calibrated on supported hardware. The parameters must be benchmarked and bounded to resist denial-of-service via attacker-controlled KDF metadata. The package password wraps a random Package Key; it does not directly encrypt file chunks.
-
-Never store plaintext passwords. Avoid password exposure in logs, crash reports, command-line arguments, environment variables, and telemetry.
-
-## 7. Secret memory
-
-Use zeroization helpers and minimize secret lifetime, copies, and formatting. Recognize that Rust zeroization cannot guarantee removal from compiler-generated copies, registers, swap, hibernation, crash dumps, or a compromised OS. Do not claim perfect memory erasure.
-
-## 8. Required validation
-
-Before crypto code is accepted:
-- review the library and exact version/features;
-- document key hierarchy and context labels;
-- define nonce allocation and crash/clone behavior;
-- test wrong key, modified ciphertext/AAD, truncation, reordering, invalid metadata, and boundary lengths;
-- use published test vectors where applicable;
-- fuzz parsers and format boundaries;
-- independent review by qualified team members;
-- document known limits and algorithm/version migration path.
+## Required before implementation
+Create ADRs for algorithm/library selection, KDF parameter policy, key hierarchy, streaming/chunk protocol, nonce strategy, metadata authentication, rollback model, and zeroization expectations. Benchmark on target hardware and test across platforms.
