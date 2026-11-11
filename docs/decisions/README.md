@@ -1,36 +1,39 @@
 # Architecture Decision Records
 
-ADRs preserve why an architectural decision was made. They are part of the engineering contract for human contributors and AI agents.
+Material architecture and security decisions are recorded here. ADRs preserve context, alternatives, consequences, status, and review history. Do not silently change an accepted decision in code.
 
-## Status values
+## Status vocabulary
+- **Proposed:** under discussion; not binding.
+- **Accepted:** agreed direction; implementation may still be pending.
+- **Superseded:** replaced by a later ADR.
+- **Rejected:** considered and not selected.
 
-- Accepted: agreed direction; implementation details may still need validation.
-- Proposed: requires explicit approval.
-- Open: unresolved.
-- Superseded: replaced by a later ADR.
-- Rejected: considered and not selected.
+## Required ADR topics
+The following are planned records; do not fabricate an accepted decision where implementation details remain open:
+1. Rust modular workspace and dependency boundaries.
+2. Cryptographic library and algorithm selection.
+3. Key hierarchy and password/recovery wrappers.
+4. Chunked/streaming encryption protocol and nonce strategy.
+5. Encrypted storage format, WAL, and durability.
+6. Development Mode working-set model.
+7. Execution Mode process identity and scope grants.
+8. Filesystem mediation backend per OS.
+9. Portable package format and independent package password.
+10. Recovery Key, Recovery File, and trusted-device lifecycle.
+11. Versioning and migration policy.
+12. Desktop UI and privileged process model.
 
-## Required ADR sections
+## ADR template
 
-1. Title and status.
-2. Context/problem.
-3. Decision.
-4. Alternatives considered.
-5. Consequences and trade-offs.
-6. Security implications and affected invariants.
-7. Validation/tests required.
-8. Follow-up and revisit conditions.
-
-Do not edit an accepted ADR to silently change its meaning. Create a superseding ADR and link both documents.
-
-## Initial ADR index
-
-- ADR-0001: Rust modular workspace and cross-platform strategy.
-- ADR-0002: Development Mode and Execution Mode separation.
-- ADR-0003: Cryptographic primitive families and key hierarchy.
-- ADR-0004: Encrypted random-access chunk storage and journal requirements.
-- ADR-0005: Identity, policy, session, and broker boundaries.
-- ADR-0006: Filesystem mediation and platform backend strategy.
-- ADR-0007: Portable encrypted package behavior.
-- ADR-0008: Recovery routes and operation security levels.
-- ADR-0009: Desktop UI direction.
+Create files as `ADR-NNNN-short-title.md` with:
+- Title and status.
+- Date and decision owners/reviewers.
+- Context and problem statement.
+- Security requirements/invariants.
+- Considered options.
+- Decision and rationale.
+- Consequences and trade-offs.
+- Threat assumptions and residual risks.
+- Implementation and test plan.
+- Compatibility/migration impact.
+- References.
