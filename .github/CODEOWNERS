@@ -1,0 +1,9 @@
+# Assign actual GitHub usernames before enabling mandatory CODEOWNERS review.
+# Do not invent owners. Security-sensitive paths should have at least two qualified reviewers.
+
+# Example after team handles are confirmed:
+# /crates/ark-crypto/ @security-architecture-owner @offensive-review-owner
+# /crates/ark-storage/ @systems-owner @offensive-review-owner
+# /crates/ark-policy/ @security-architecture-owner @offensive-review-owner
+# /platform/ @systems-owner @offensive-review-owner
+# /docs/security/ @security-architecture-owner @offensive-review-owner
