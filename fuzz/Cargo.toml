@@ -1,0 +1,24 @@
+[package]
+name = "ark-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+ark-core = { path = "../crates/ark-core" }
+
+[[bin]]
+name = "fuzz_core_ids"
+path = "fuzz_targets/fuzz_core_ids.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_core_versions"
+path = "fuzz_targets/fuzz_core_versions.rs"
+test = false
+doc = false
