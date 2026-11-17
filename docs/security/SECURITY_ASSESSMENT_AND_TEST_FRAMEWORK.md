@@ -1,73 +1,44 @@
-# Comprehensive Security Architecture Assessment and Testing Framework
+# Security Assessment and Testing Framework (Core & KDF Working Draft)
 
 **Subsystem:** ARK Security & Verification  
 **Author:** Ali (`@alieliteworks-debug`)  
-**Target Subsystems:** `ark-core` (Systems Engineering), `ark-crypto` (Cryptography)  
-**Status:** Approved Security Baseline  
+**Target Subsystems:** `ark-core` (PR #2), `ark-crypto` (PR #3)  
+**Status:** Proposed Working Draft (Pending Review — Not an Approved ADR Baseline)
+
+> **Evidence & Accuracy Notice:**
+> Per `AGENTS.md` and `docs/architecture/SECURITY_INVARIANTS.md`, no security control is considered implemented or verified merely by being documented here. This document separates **currently implemented** primitives from **proposed/deferred** architecture.
 
 ---
 
-## 1. Threat Model & Trust Boundaries
+## 1. Current Scope vs. Deferred Architecture
 
-The ARK platform mediates access to on-disk source code and development workspaces. The security objective is zero unencrypted plaintext at rest without breaking IDE workflows and compilers.
+### 1.1 Currently Implemented (In Scope for Foundation v1)
+- **`ark-core` (PR #2):** Typed domain identifiers (`WorkspaceId`, `ProjectId`, `FileId`, `SessionId`, `DeviceId`, `PackageId`, `TransactionId`), coarse sanitized `ErrorCode` / `ArkError`, `RuntimeMode` (`Development`, `Execution`), and domain-separated version types.
+- **`ark-crypto` (PR #3):** Password-based KEK derivation (`derive_kek` via Argon2id) and context-separated subkey derivation (`derive_subkey` via HKDF-SHA-256) returning `Zeroizing<[u8; 32]>`.
 
-### 1.1 Trust Domains
-- **Fully Trusted:** In-memory execution state of the ARK core process. Master secrets protected in isolated memory and scrubbed via `Zeroize` upon deallocation.
-- **Semi-Trusted:** Authorized developer tools (`cargo`, `rustc`, language servers) granted explicit, bounded file mediation scoped to approved Process IDs (PIDs) following interactive user confirmation.
-- **Untrusted / Adversarial:** The raw underlying filesystem, untrusted peripheral drives, unprivileged operating system processes, local network interfaces, and hostile third-party binaries.
-
-### 1.2 STRIDE Threat Assessment
-1. **Spoofing:** Hostile process masquerading as an authorized compiler.  
-   *Mitigation:* Binary cryptographic hash validation, executable path verification, PID verification, and interactive user consent through GUI broker.
-2. **Tampering:** Bit manipulation on ciphertext chunks residing on disk.  
-   *Mitigation:* Authenticated Encryption with Associated Data (AEAD); strict fail-safe rejection on tag mismatch.
-3. **Repudiation:** Disputing mediation and file-access events.  
-   *Mitigation:* Tamper-evident local audit records for every cryptographic transformation.
-4. **Information Disclosure:** Plaintext leakage via temporary directories, hibernation files, or swap memory.  
-   *Mitigation:* In-memory transient mediation; mandatory `mlock` memory pinning; enforced deterministic scrubbing.
-5. **Denial of Service:** Resource exhaustion through rapid, unauthenticated broker requests.  
-   *Mitigation:* Strict rate-limiting at the local broker IPC boundary.
-6. **Elevation of Privilege:** Local unprivileged processes attempting memory inspection.  
-   *Mitigation:* Principle of least privilege; sandbox boundary enforcement.
+### 1.2 Proposed / Deferred Architecture (Not Yet Implemented)
+The following controls are architectural directions documented in `docs/architecture/ARCHITECTURE.md` and `docs/security/THREAT_MODEL.md`, **not** implemented or verified controls:
+- Process identity verification (binary hash, executable path, live PID evidence) and interactive GUI broker consent.
+- Authenticated encryption (`XChaCha20-Poly1305` AEAD) and nonce management.
+- OS memory pinning (`mlock` / `VirtualLock`) and runtime plaintext working-set isolation.
+- Broker IPC rate-limiting and tamper-evident audit logging.
 
 ---
 
-## 2. Non-Negotiable Security Invariants
+## 2. Core Security Invariants Tested (`ark-core`)
 
-1. **Zero-Plaintext on Disk Invariant:** No unencrypted source code or sensitive metadata may be persisted to permanent storage outside bounded, verified mediation contexts.
-2. **Deterministic Memory Scrubbing Invariant:** Every data structure handling keys, salts, passwords, or raw plaintext must implement `Zeroize` and `ZeroizeOnDrop`.
-3. **Authenticated Decryption Invariant:** No ciphertext payload is decrypted without successful tag verification.
-4. **Nonce Uniqueness Invariant:** Nonce/IV values must never be reused under identical key streams (enforced by 192-bit random nonces with XChaCha20).
-5. **Strict Domain Segregation Invariant:** Identifier types and runtime modes (`Development` vs `Execution`) are segregated at the type level to eliminate category confusion.
-
----
-
-## 3. Adversarial & Negative Testing Matrix
-
-| Test Suite | Malformed Input / Fault Scenario | Expected Security Behavior |
-| :--- | :--- | :--- |
-| **Tampered Ciphertext** | Single-bit modification in encrypted payload | Explicit `IntegrityFailure` error; zero plaintext returned |
-| **Replay Attack** | Transmitting stale valid message with old Nonce | Rejected immediately due to nonce/session mismatch |
-| **Invalid Key / Password** | Erroneous passphrase provided to KDF | Constant-time failure without timing leakage |
-| **Truncated Header** | Corrupted or abbreviated container header | Safe parsing failure without panic or memory leakage |
-| **Unapproved PID Access** | Unauthorized process reading transient buffer | Immediate denial with `AccessDenied` classification |
-| **Memory Leak Verification** | Core memory dump post-session termination | No secret artifacts remaining in allocated pages |
+1. **Sanitized Error Boundary (`ARK-SEC-028` — Partial):** `ArkError` wraps a coarse `ErrorCode` enum with static display strings and no arbitrary payload fields. *(Note: verifying static error strings does not by itself prove secret-free diagnostics across future subsystems; sentinel injection tests are tracked in `[A-04]`.)*
+2. **Domain Type Segregation (`ARK-SEC-003` — Vocabulary Level):** Distinct newtype wrappers prevent accidental mixing of identifiers or version domains at compile time. Typed IDs are domain labels only, not authorization.
+3. **Numeric Version Ordering (`ARK-SEC-019` Note):** `ApplicationVersion` and `StorageFormatVersion` implement monotonic `Ord` comparison. **Important:** Version ordering alone is **not** anti-rollback protection; anti-rollback requires trusted monotonic state anchoring (deferred to Storage/Recovery).
+4. **Runtime Mode Distinction:** `RuntimeMode::Development` and `RuntimeMode::Execution` are distinct enum variants; `RuntimeMode` is not a security boundary or access grant.
 
 ---
 
-## 4. Cryptographic Dependencies & Policy
+## 3. Verification Status & Fuzzing Evidence
 
-Mandatory crates for cryptographic implementation:
-- **AEAD:** `chacha20poly1305` (v0.10) with XChaCha20-Poly1305 (192-bit nonce space).
-- **Key Derivation (KDF):** `argon2` (v0.5) adhering to the Argon2id standard, paired with `hkdf` (v0.12) using SHA-256 for domain-separated subkey extraction.
-- **Memory Sanitization:** `zeroize` (v1.7+) with derive macros.
-- **CSPRNG:** `rand::rngs::OsRng` exclusively.
-
----
-
-## 5. Fuzz Testing Architecture
-
-The `fuzz/` package deploys `libfuzzer-sys` to stress parser boundaries and primitives:
-- `fuzz_core_ids`: Validates parsing, hex formatting, and round-trip consistency across all 7 domain identifiers.
-- `fuzz_core_versions`: Stresses monotonic version ordering and bounds checks against random multi-byte inputs.
-- `fuzz_kdf`: Evaluates input boundary tolerance for password and salt buffers.
+- **Compile & Lint Verification (`ark-core`):**
+  - `cargo check --tests`: Passed (verifies test compilation against PR #2 public API).
+  - `cargo clippy --tests`: Passed under workspace lints (`unsafe_code = "forbid"`, `panic = "deny"`, `unwrap_used = "deny"`).
+- **Fuzzing Scaffold (`fuzz/`):**
+  - `fuzz/Cargo.toml`, `fuzz_core_ids`, and `fuzz_core_versions` are committed as initial `libfuzzer-sys` targets.
+  - **Limitation:** `cargo check` / `cargo clippy` do **not** execute fuzzers. Actual fuzzing duration, seed corpus, coverage, and crash-triage evidence are deferred to `[A-05]`.
