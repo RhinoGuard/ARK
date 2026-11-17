@@ -22,3 +22,15 @@ name = "fuzz_core_versions"
 path = "fuzz_targets/fuzz_core_versions.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_argon2id"
+path = "fuzz_targets/fuzz_argon2id.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_hkdf"
+path = "fuzz_targets/fuzz_hkdf.rs"
+test = false
+doc = false
