@@ -1,10 +1,10 @@
-//! Security invariant tests for ark-core domain primitives.
+//! Security-relevant vocabulary and contract tests for ark-core domain primitives.
 //!
-//! Validates non-negotiable security requirements including:
-//! - Sanitized error boundaries (no internal data leakage in display/debug representations).
-//! - Strict domain type isolation (WorkspaceId != ProjectId != FileId != SessionId at type level).
-//! - Domain version segregation and monotonic ordering for anti-rollback.
-//! - Runtime mode segregation (Development vs Execution).
+//! Validates:
+//! - Low-detail classification formatting for ArkError (Display/Debug representations).
+//! - Strict domain type isolation (WorkspaceId != ProjectId != FileId != SessionId).
+//! - Domain version segregation and numeric ordering comparisons.
+//! - RuntimeMode distinctness (workflow vocabulary, not access authorization).
 
 use ark_core::errors::{ArkError, ErrorCode};
 use ark_core::ids::{
@@ -17,29 +17,27 @@ use ark_core::versions::{
 };
 
 #[test]
-fn test_invariant_sanitized_error_no_leakage() {
-    // SECURITY INVARIANT: Errors crossing boundaries must never contain arbitrary payload,
-    // secrets, file paths, or OS details.
+fn test_invariant_sanitized_error_display_format() {
+    // Tests that ErrorCode classification maps to standard static label text.
+    // NOTE: This checks coarse classification formatting only; comprehensive secret sanitization
+    // across complex runtime error chains requires explicit sentinel injection testing.
     let error = ArkError::new(ErrorCode::IntegrityFailure);
 
-    // Assert coarse classification code is exact
     assert_eq!(error.code(), ErrorCode::IntegrityFailure);
 
-    // Assert Display representation contains only standardized label
     let display_str = format!("{error}");
     assert!(
         display_str.contains("integrity"),
-        "Display representation must be standard classification"
+        "Display representation must match static classification label"
     );
 
-    // Verify debug representation does not expose memory addresses or raw internals
     let debug_str = format!("{error:?}");
     assert!(debug_str.starts_with("ArkError"));
 }
 
 #[test]
 fn test_invariant_all_error_codes_classified() {
-    // SECURITY INVARIANT: Every domain failure must map to a known, non-leaking ErrorCode.
+    // Verifies that every domain failure code provides a non-empty static Display label.
     let codes = [
         ErrorCode::InvalidArgument,
         ErrorCode::InvalidIdentifier,
@@ -62,7 +60,6 @@ fn test_invariant_all_error_codes_classified() {
     for code in codes {
         let err = ArkError::new(code);
         assert_eq!(err.code(), code);
-        // Ensure Display formatting does not panic for any defined code
         let msg = format!("{err}");
         assert!(!msg.is_empty());
     }
@@ -70,8 +67,8 @@ fn test_invariant_all_error_codes_classified() {
 
 #[test]
 fn test_invariant_identifier_type_safety() {
-    // SECURITY INVARIANT: Identifiers for different domain entities must never be interchangeable
-    // without explicit type conversion. Tests all 7 officially supported domain IDs.
+    // Verifies domain identifier type isolation across all 7 officially supported domain IDs.
+    // NOTE: Typed identifiers provide domain vocabulary separation; they do not grant authorization.
     let raw_bytes = [0x42u8; 16];
 
     let ws_id = WorkspaceId::from_bytes(raw_bytes);
@@ -82,7 +79,6 @@ fn test_invariant_identifier_type_safety() {
     let pkg_id = PackageId::from_bytes(raw_bytes);
     let tx_id = TransactionId::from_bytes(raw_bytes);
 
-    // Assert individual byte consistency
     assert_eq!(ws_id.into_bytes(), [0x42u8; 16]);
     assert_eq!(proj_id.into_bytes(), [0x42u8; 16]);
     assert_eq!(file_id.into_bytes(), [0x42u8; 16]);
@@ -91,7 +87,6 @@ fn test_invariant_identifier_type_safety() {
     assert_eq!(pkg_id.into_bytes(), [0x42u8; 16]);
     assert_eq!(tx_id.into_bytes(), [0x42u8; 16]);
 
-    // Format check: all identifiers must serialize to exactly 32 lowercase hex characters
     let hex_expected = "42424242424242424242424242424242";
     assert_eq!(format!("{ws_id}"), hex_expected);
     assert_eq!(format!("{proj_id}"), hex_expected);
@@ -103,9 +98,10 @@ fn test_invariant_identifier_type_safety() {
 }
 
 #[test]
-fn test_invariant_runtime_mode_isolation() {
-    // SECURITY INVARIANT: Runtime modes must be strictly segregated; Development and Execution
-    // modes enforce distinct boundaries and must never alias.
+fn test_invariant_runtime_mode_distinctness() {
+    // Verifies that RuntimeMode variants are distinct workflow descriptors.
+    // NOTE: RuntimeMode describes access patterns (Development vs Execution);
+    // it does NOT establish a security boundary, enforce sandbox isolation, or grant access.
     let dev = RuntimeMode::Development;
     let exec = RuntimeMode::Execution;
 
@@ -115,8 +111,10 @@ fn test_invariant_runtime_mode_isolation() {
 }
 
 #[test]
-fn test_invariant_version_monotonicity_and_ordering() {
-    // SECURITY INVARIANT: Anti-rollback guarantees require strict monotonic ordering of versions.
+fn test_invariant_version_monotonic_ordering() {
+    // Tests component-wise numeric Ord comparison for versions.
+    // NOTE: Numeric version ordering is a mathematical property and does NOT alone
+    // provide anti-rollback protection. Anti-rollback requires trusted monotonic state anchoring.
     let v1 = ApplicationVersion::new(1, 0, 0);
     let v1_patch = ApplicationVersion::new(1, 0, 1);
     let v1_minor = ApplicationVersion::new(1, 1, 0);
@@ -133,8 +131,7 @@ fn test_invariant_version_monotonicity_and_ordering() {
 
 #[test]
 fn test_invariant_version_domain_separation() {
-    // SECURITY INVARIANT: Storage, Metadata, Policy, Recovery, Package, and IPC versions
-    // must not be accidentally substitutable.
+    // Verifies that distinct format version newtypes prevent accidental cross-domain substitution.
     let storage_ver = StorageFormatVersion::new(1, 0);
     let metadata_ver = MetadataSchemaVersion::new(1, 0);
     let policy_ver = PolicySchemaVersion::new(1, 0);
