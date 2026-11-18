@@ -4,6 +4,9 @@ use libfuzzer_sys::fuzz_target;
 
 const MAX_CONTEXT_LEN: usize = 256;
 
+/// Context and IKM boundary simulation struct for HKDF fuzz scaffolding.
+/// NOTE: This target evaluates context length and non-empty slice validation;
+/// it does NOT directly invoke `derive_subkey` in the current un-integrated workspace layout.
 fuzz_target!(|data: &[u8]| {
     // Structure:
     // [0]: ikm length

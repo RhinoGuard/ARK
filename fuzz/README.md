@@ -1,58 +1,41 @@
-# ARK Fuzzing Harness & Reproducible Invocation Guide
+# ARK Fuzzing Harness & Invocation Specification
 
-**Status:** Hardened Fuzzing Guide (`[A-05]` / Issue #13).  
-**Targets:** `fuzz_core_ids`, `fuzz_core_versions`, `fuzz_argon2id`, `fuzz_hkdf`.  
-**Underlying Engine:** `libFuzzer` via `cargo-fuzz`.
-
----
-
-## 1. Safety & Resource Bounds Policy
-
-To ensure fuzzing remains safe for local machines and CI without triggering Out-Of-Memory (OOM) or system lockup:
-- **`fuzz_argon2id`:** Memory cost is clamped to `<= 1024 KiB` and iterations are clamped to `<= 2`. Fuzzing uses scaled resource envelopes, never multi-gigabyte production workloads.
-- **`fuzz_hkdf`:** Context buffer lengths are bounded to `<= 512` bytes to stress the `MAX_CONTEXT_LEN = 256` cutoff.
-- **No Real Secrets:** Seed corpora and fuzz runs must never contain real user passwords, production keys, or recovery secrets.
+**Status:** Scaffold & Target Specification (`[A-05]` / Issue #13) — Distinguishing Core Targets from KDF Scaffolds.  
+**Execution Status:** **Not Run / Not Executed in Automated CI.** No execution duration, coverage percentage, or absence-of-crash claims are made for these targets in the current repository state.
 
 ---
 
-## 2. Invocation Instructions
+## 1. Classification of Current Fuzz Targets
 
-### 2.1 Prerequisites
+The fuzz package contains two distinct classes of targets:
+
+### 1.1 Core API Connected Targets
+- **`fuzz_core_ids`:** Directly invokes `ark-core::ids::*` (`from_bytes`, hex formatting, round-trip invariants). Connected to implemented Core public APIs.
+- **`fuzz_core_versions`:** Directly invokes `ark-core::versions::*` (`ApplicationVersion`, `StorageFormatVersion`, etc.). Connected to implemented Core public APIs.
+
+### 1.2 KDF Input Scaffolds (Input-Shape Only)
+- **`fuzz_argon2id`:** An **input-shape validation scaffold**. It decodes structured byte slices to evaluate parameter boundary logic and length clamping. **Important:** It does **not** directly invoke `ark_crypto::kdf::derive_kek` in the current un-integrated workspace layout. It is a harness scaffold awaiting `[S-01]` workspace integration.
+- **`fuzz_hkdf`:** An **input-shape validation scaffold**. It evaluates context slicing and IKM length bounds around `MAX_CONTEXT_LEN = 256`. **Important:** It does **not** directly execute `ark_crypto::kdf::derive_subkey` in the current layout.
+
+---
+
+## 2. Resource Bounding & Invocation Specification
+
+When executed with `cargo-fuzz` (under a nightly toolchain with ASan):
+
 ```bash
-cargo install cargo-fuzz
-rustup default nightly   # libFuzzer requires the nightly compiler with ASan
-```
+# Core Domain Targets (Direct API Calls)
+cargo fuzz run fuzz_core_ids -- -rss_limit_mb=1024
+cargo fuzz run fuzz_core_versions -- -rss_limit_mb=1024
 
-### 2.2 Running Fuzz Targets
-Run each target with bounded memory and time:
-
-```bash
-# Fuzz Core Domain Identifiers
-cargo fuzz run fuzz_core_ids -- -max_total_time=60 -rss_limit_mb=1024
-
-# Fuzz Semantic and Format Versions
-cargo fuzz run fuzz_core_versions -- -max_total_time=60 -rss_limit_mb=1024
-
-# Fuzz Argon2id Input Bounds
-cargo fuzz run fuzz_argon2id -- -max_total_time=120 -rss_limit_mb=1024
-
-# Fuzz HKDF-SHA-256 Input Bounds
-cargo fuzz run fuzz_hkdf -- -max_total_time=60 -rss_limit_mb=1024
+# KDF Scaffold Targets (Parameter Bounds Simulation)
+cargo fuzz run fuzz_argon2id -- -rss_limit_mb=1024
+cargo fuzz run fuzz_hkdf -- -rss_limit_mb=1024
 ```
 
 ---
 
-## 3. Seed Corpora & Crash Artifact Triage
+## 3. Crash Triage & Limitation Notice
 
-- **Corpus Location:** `fuzz/corpus/<target_name>/` (managed by cargo-fuzz, ignored in git).
-- **Artifact Handling:** Any crash artifact (`fuzz/artifacts/<target_name>/crash-*`) must be:
-  1. Minimized via `cargo fuzz cmin <target_name>`.
-  2. Reproduced via `cargo fuzz run <target_name> <path_to_artifact>`.
-  3. Converted into a deterministic unit regression test in the relevant crate's `tests/` directory.
-  4. Tracked in an actionable security issue before closing.
-
----
-
-## 4. Limitation Statement
-
-Fuzzing provides empirical evidence of robustness against malformed and boundary inputs. It does **not** constitute mathematical proof of absence of vulnerabilities, side-channel resilience, or cryptographic correctness.
+- Any crash discovered in future fuzz runs must be minimized, converted to a regression test, and tracked before closing.
+- Fuzzing provides empirical evidence of robustness against malformed inputs; it is **not** mathematical proof of absence of vulnerabilities or cryptographic correctness.

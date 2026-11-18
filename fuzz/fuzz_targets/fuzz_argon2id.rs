@@ -2,7 +2,9 @@
 
 use libfuzzer_sys::fuzz_target;
 
-/// Bounded mock of Argon2idConfig for fuzzing to strictly prevent host/CI OOM.
+/// Parameter bound simulation struct for Argon2id fuzz scaffolding.
+/// NOTE: This target evaluates parameter decoding and bounding logic;
+/// it does NOT directly invoke `derive_kek` in the current un-integrated workspace layout.
 #[derive(Clone, Copy, Debug)]
 struct FuzzArgon2Config {
     memory_kib: u32,
