@@ -10,8 +10,9 @@ This documentation is the shared engineering baseline for human contributors and
 4. architecture/CRATE_BOUNDARIES_AND_DEPENDENCIES.md — proposed Rust crate map and dependency direction.
 5. architecture/SECURITY_INVARIANTS.md — properties that implementations must preserve.
 6. security/THREAT_MODEL.md — assets, actors, trust boundaries, threats, and explicit limitations.
-7. Relevant subsystem specifications.
-8. decisions/ — accepted and proposed Architecture Decision Records.
+7. security/SYSTEM_TRUST_BOUNDARIES.md — system-level trust zones, security-critical flows, enforcement owners, and unresolved decisions.
+8. Relevant subsystem specifications.
+9. decisions/ — accepted and proposed Architecture Decision Records.
 
 ## Contributor references
 
