@@ -97,11 +97,14 @@ flowchart TB
   EXT[External package / storage media] -->|hostile bytes| PARSE[Bounded import / storage parsers]
 
   subgraph TCB[ARK trusted computing base — proposed]
-    IPC --> ID[Identity verification]
-    ID --> SESS[Session validation]
-    SESS --> POL[Default-deny policy]
-    POL --> BR[Security Broker]
-    BR --> RT[Runtime orchestration]
+    IPC --> BR[Security Broker / request coordinator]
+    BR --> ID[Identity verification]
+    BR --> SESS[Session validation]
+    BR --> POL[Default-deny policy]
+    ID -->|evidence| BR
+    SESS -->|session state| BR
+    POL -->|policy decision| BR
+    BR -->|authorized operation only| RT[Runtime orchestration]
     RT --> FS[Filesystem mediation contract]
     BR --> AUD[Secret-safe audit events]
     RT --> ST[Storage engine]
@@ -223,16 +226,17 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 
 **Recovery Key route**
 1. User supplies the independent per-Workspace Recovery Key through a protected recovery flow.
-2. Recovery validates Workspace binding and versioned wrapper metadata.
-3. Crypto verifies/unlocks only the intended wrapper and returns the minimum required key material.
+2. Recovery performs bounded structural/version parsing and checks the expected Workspace selector against wrapper metadata. These parsed fields remain untrusted at this stage.
+3. Crypto authenticates the wrapper and its associated data (including Workspace binding, wrapper purpose, and version) and unwraps it as one cryptographic verification step. No key material is released if authentication fails.
 4. Storage verifies the recovered workspace state before publication.
 5. Recovery success/failure and wrapper lifecycle events are audited without the Recovery Key.
 
 **Recovery File route**
 1. User supplies the Recovery File from untrusted external storage.
 2. Parser enforces strict size/count/version bounds before allocation or cryptographic work.
-3. Recovery verifies file authenticity, Workspace binding, wrapper purpose, and metadata consistency.
-4. Crypto unwraps only after all required checks; Storage validates the recovered data before publication.
+3. Recovery checks only structural metadata and the expected Workspace selector; these fields remain untrusted until cryptographically authenticated.
+4. Crypto authenticates the encrypted wrapper and its associated data (including Workspace binding, wrapper purpose, and version) and unwraps it as one operation. No key material is released if authentication fails.
+5. Storage validates the recovered data before publication.
 
 **Critical distinction:** Recovery File is an authenticated wrapper backup and metadata carrier, not a separate independent cryptographic factor. Possession of the file alone must not be described as equivalent to a separate secret unless the final wrapper protocol explicitly requires and verifies one.
 
