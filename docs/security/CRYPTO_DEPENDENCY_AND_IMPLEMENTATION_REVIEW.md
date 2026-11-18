@@ -1,36 +1,37 @@
 # Independent Crypto Dependency and Implementation Security Review
 
-**Status:** Completed Security Audit Report for `[A-06]` (Issue #14).  
+**Status:** Preliminary Static Review Report for `[A-06]` (Issue #14) — Scoped to Available Source.  
 **Reviewer:** Ali (`@alieliteworks-debug`), ARK Security & Verification  
 **Target Pull Request:** PR #3 (`feature/crypto-kdf-implementation` by `@ZeroTrace79`)  
 **Audit Target Commits:** `c7322e2` .. `3fdabeb`  
 **Evaluation Date:** 2026-11-17  
 
+> **Review Scope & Honesty Notice:**
+> This document represents an **independent preliminary static review** of the delivered KDF source code and its direct dependencies. It is strictly scoped to the available PR #3 implementation. It does **not** constitute a final product-wide cryptographic certification or an endorsement of unimplemented subsystems.
+
 ---
 
 ## 1. Executive Summary
 
-This independent security review evaluates the key-derivation foundation delivered in PR #3 (`ark-crypto`), comprising password-based KEK derivation via Argon2id (`src/kdf/argon2id.rs`) and subkey derivation via HKDF-SHA-256 (`src/kdf/hkdf_sha256.rs`).
+This independent review evaluates the key-derivation foundation delivered in PR #3 (`ark-crypto`), comprising password-based KEK derivation via Argon2id (`src/kdf/argon2id.rs`) and subkey derivation via HKDF-SHA-256 (`src/kdf/hkdf_sha256.rs`).
 
-**Overall Assessment:** The core cryptographic algorithm choices align with ADR-0003 and project invariants (`ARK-SEC-013`, `ARK-SEC-016`, `ARK-SEC-028`). Upstream dependencies originate from the authoritative and widely vetted `RustCrypto` organization. However, two **Release Blocker** findings and two **Must-Fix** findings were identified concerning unbounded public configuration structs, crate isolation from workspace lints, and lack of typed IKM entropy constraints.
+**Overall Assessment:** The core cryptographic algorithm choices align with ADR-0003 and project invariants (`ARK-SEC-013`, `ARK-SEC-016`, `ARK-SEC-028`). Upstream dependencies originate from the authoritative and widely vetted `RustCrypto` organization. Two **Release Blocker** findings and two **Must-Fix** findings were identified concerning unbounded public configuration structs, crate isolation from workspace lints, and input length validation contracts.
 
 ---
 
-## 2. Dependency Inventory & Advisory Review
+## 2. Dependency Inventory & Preliminary Advisory Review
 
 ### 2.1 Direct Cryptographic Dependencies (`Cargo.toml`)
-| Crate | Resolved Version | License | Maintenance / Source | Advisory Check (RustSec) |
+| Crate | Declared Version | License | Maintenance / Source | Advisory Status |
 | :--- | :---: | :---: | :--- | :---: |
-| **`argon2`** | `0.5.3` | Apache-2.0 / MIT | RustCrypto (Active) | No known active vulnerabilities |
-| **`hkdf`** | `0.12.4` | Apache-2.0 / MIT | RustCrypto (Active) | No known active vulnerabilities |
-| **`sha2`** | `0.10.9` | Apache-2.0 / MIT | RustCrypto (Active) | No known active vulnerabilities |
-| **`zeroize`** | `1.9.1` (derive: `1.5.0`) | Apache-2.0 / MIT | RustCrypto (Active) | No known active vulnerabilities |
+| **`argon2`** | `0.5` | Apache-2.0 / MIT | RustCrypto (Active) | Static inspection: no known active advisories |
+| **`hkdf`** | `0.12` | Apache-2.0 / MIT | RustCrypto (Active) | Static inspection: no known active advisories |
+| **`sha2`** | `0.10` | Apache-2.0 / MIT | RustCrypto (Active) | Static inspection: no known active advisories |
+| **`zeroize`** | `1.7` (features: `derive`) | Apache-2.0 / MIT | RustCrypto (Active) | Static inspection: no known active advisories |
 
-### 2.2 Transitive Dependency Surface
-- **Cryptographic primitives & traits:** `digest 0.10.7`, `crypto-common 0.1.7`, `block-buffer 0.10.4`, `hmac 0.12.1`, `blake2 0.10.6`, `subtle 2.6.1`, `base64ct 1.8.3`.
-- **RNG & low-level:** `rand_core 0.6.4`, `cpufeatures 0.2.17`.
-- **Derive macros:** `syn 2.0.119`, `quote 1.0.47`, `proc-macro2 1.0.107`.
-- **Finding:** No unmaintained crates or deprecated algorithm implementations (e.g., MD5, SHA-1) exist in the transitive graph.
+### 2.2 Advisory Audit Status & Tooling Traceability
+- **Current Evidence:** Manual inspection of published RustSec advisory database entries for the selected major/minor versions.
+- **Reproducible Tooling Gate (Pending):** Automated execution of `cargo audit` against `Cargo.lock` requires crate integration into the root Cargo workspace (`[S-01]`). Full machine-readable advisory output and toolchain version will be recorded upon integrated workspace CI activation.
 
 ---
 
@@ -48,7 +49,7 @@ This independent security review evaluates the key-derivation foundation deliver
   }
   ```
 - **Attack Preconditions & Impact:** All struct fields are public. While `derive_kek` passes them to `argon2::Params::new`, the library allows up to 4 GiB memory allocation and large iteration counts. If an untrusted `.arkvault` package header or external caller sets `memory_kib: 4 * 1024 * 1024`, `derive_kek` will attempt multi-gigabyte allocation, inducing thread hang or Out-Of-Memory (OOM) crash.
-- **Remediation:** Enforce internal ARK policy bounds (e.g., `MIN_MEMORY_KIB = 16 * 1024`, `MAX_MEMORY_KIB = 256 * 1024`, `MAX_ITERATIONS = 10`, `MAX_LANES = 8`) via a private constructor or a validating `validate()` method before calling `Params::new`. (Tracked in `[S-02]` / `[S-03]`).
+- **Remediation:** Enforce internal ARK policy bounds (e.g., `MIN_MEMORY_KIB = 16 * 1024`, `MAX_MEMORY_KIB = 256 * 1024`, `MAX_ITERATIONS = 10`, `MAX_LANES = 8`) via a validating constructor before calling `Params::new`. (Tracked in `[S-02]` / `[S-03]`).
 
 ---
 
@@ -61,7 +62,7 @@ This independent security review evaluates the key-derivation foundation deliver
 
 ---
 
-### Finding SEC-KDF-03: `derive_subkey` Accepts Sub-Cryptographic & Weak IKM
+### Finding SEC-KDF-03: `derive_subkey` Accepts Sub-Cryptographic Length IKM
 - **Severity:** **Must-Fix**
 - **Location:** `src/kdf/hkdf_sha256.rs` (`lines 17-20`)
 - **Evidence:**
@@ -70,8 +71,8 @@ This independent security review evaluates the key-derivation foundation deliver
       return Err(HkdfError::EmptyInputKeyMaterial);
   }
   ```
-- **Attack Preconditions & Impact:** Any slice with length `>= 1` byte is accepted. If a downstream caller inadvertently passes a raw user passphrase or an unpadded 4-byte token directly to HKDF rather than to Argon2id, HKDF will derive subkeys without error, but with severely degraded entropy, vulnerable to fast brute force.
-- **Remediation:** Enforce a minimum IKM length of at least 16 or 32 bytes (`IKM_MIN_LEN = 32`), or require a strongly typed newtype wrapper at the Core-to-Crypto boundary (`[E-03]`, `[S-04]`).
+- **Attack Preconditions & Impact:** Any slice with length `>= 1` byte is accepted. If a downstream caller inadvertently passes a raw user passphrase or a 4-byte token directly to HKDF rather than to Argon2id, HKDF will derive subkeys without error, but with severely degraded entropy.
+- **Remediation Note:** Length enforcement alone does not guarantee entropy or key quality. However, an explicit minimum length constraint (e.g., `>= 16` or `32` bytes) or a strongly typed key newtype at the Core-to-Crypto boundary prevents accidental call-site confusion (`[E-03]`, `[S-04]`).
 
 ---
 
