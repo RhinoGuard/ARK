@@ -1,10 +1,13 @@
 //! Adversarial and negative security tests for the KDF and Core foundation.
 //!
-//! Evaluates security-critical boundaries under hostile and malformed inputs:
+//! Evaluates security-critical boundaries under hostile and boundary inputs:
 //! - Sentinel secret non-leakage in error representations (ARK-SEC-028).
 //! - Strict input bound enforcement (password length, salt length, context length).
 //! - Fail-safe rejection of empty inputs without panic.
 //! - Parameter boundary validation for Argon2id.
+//!
+//! Static Code Hygiene: Written entirely without `unwrap()`, `expect()`, or `expect_err()`
+//! to maintain compliance with strict workspace lints (`unwrap_used = "deny"`).
 
 use ark_crypto::kdf::{
     derive_kek, derive_subkey, Argon2Error, Argon2idConfig, HkdfError, MAX_CONTEXT_LEN,
@@ -74,14 +77,22 @@ fn test_adversarial_sentinel_secret_leakage_in_argon2_errors() {
     // SECURITY PROPERTY (ARK-SEC-028): Error objects, Display, and Debug formatters
     // must never contain or reflect the sensitive input password or salt.
     let oversized = [SENTINEL_SECRET, &[0x42u8; 1000]].concat();
-    let err = derive_kek(&oversized, SENTINEL_SALT, Argon2idConfig::default())
-        .expect_err("Must fail due to oversized password");
+    let err = match derive_kek(&oversized, SENTINEL_SALT, Argon2idConfig::default()) {
+        Ok(_) => panic!("Expected failure on oversized password, but derivation succeeded"),
+        Err(e) => e,
+    };
 
     let display_output = format!("{err}");
     let debug_output = format!("{err:?}");
 
-    let sentinel_str = std::str::from_utf8(SENTINEL_SECRET).unwrap();
-    let salt_str = std::str::from_utf8(SENTINEL_SALT).unwrap();
+    let sentinel_str = match std::str::from_utf8(SENTINEL_SECRET) {
+        Ok(s) => s,
+        Err(_) => panic!("Invalid UTF-8 sentinel string"),
+    };
+    let salt_str = match std::str::from_utf8(SENTINEL_SALT) {
+        Ok(s) => s,
+        Err(_) => panic!("Invalid UTF-8 salt string"),
+    };
 
     assert!(
         !display_output.contains(sentinel_str),
@@ -123,12 +134,17 @@ fn test_adversarial_hkdf_empty_and_oversized_context() {
 fn test_adversarial_sentinel_secret_leakage_in_hkdf_errors() {
     // SECURITY PROPERTY (ARK-SEC-028): HKDF error representations must never expose IKM or context.
     let oversized_context = vec![0x61u8; MAX_CONTEXT_LEN + 1];
-    let err = derive_subkey(SENTINEL_SECRET, None, &oversized_context)
-        .expect_err("Must fail due to oversized context");
+    let err = match derive_subkey(SENTINEL_SECRET, None, &oversized_context) {
+        Ok(_) => panic!("Expected failure on oversized context, but derivation succeeded"),
+        Err(e) => e,
+    };
 
     let display_output = format!("{err}");
     let debug_output = format!("{err:?}");
-    let sentinel_str = std::str::from_utf8(SENTINEL_SECRET).unwrap();
+    let sentinel_str = match std::str::from_utf8(SENTINEL_SECRET) {
+        Ok(s) => s,
+        Err(_) => panic!("Invalid UTF-8 sentinel string"),
+    };
 
     assert!(
         !display_output.contains(sentinel_str),
