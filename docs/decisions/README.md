@@ -17,7 +17,7 @@ Material architecture and security decisions are recorded here. ADRs preserve co
 - ADR-0003-crypto-and-key-hierarchy.md — accepted primitive-family and key-hierarchy direction; exact constructions remain gated.
 - ADR-0003-recovery-paths.md — accepted three-route recovery product model.
 - ADR-0004-portable-encrypted-packages.md — portable package behavior.
-- ADR-0005-core-foundation.md — proposed Cargo workspace and core domain foundation.
+- ADR-0005-core-foundation.md — proposed Cargo workspace and core domain foundation. See [ADR-0005 review record](ADR-0005-REVIEW.md) for the implementation and compatibility assessment.
 
 ## Registry hygiene issue
 
