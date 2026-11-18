@@ -9,7 +9,7 @@
 
 ## 1. Purpose and status vocabulary
 
-This model identifies the actors, assets, trust zones, boundaries, security-critical flows, enforcement owners, failure behavior, and unresolved decisions for ARK. It provides a system-level view; it does not replace the narrower KDF threat model in `docs/security/KDF_THREAT_MODEL.md`.
+This model identifies the actors, assets, trust zones, boundaries, security-critical flows, enforcement owners, failure behavior, and unresolved decisions for ARK. It provides a system-level view; it does not replace the focused KDF threat model produced under Issue #10 on the separate `docs/kdf-threat-model` branch ([KDF threat model](https://github.com/RhinoGuard/ARK/blob/docs/kdf-threat-model/docs/security/KDF_THREAT_MODEL.md)). That artifact is not part of this PR's base tree, so this reference is intentionally branch-qualified.
 
 Every material statement uses one of these status labels:
 
@@ -65,7 +65,8 @@ The system boundary includes ARK applications, local control API/IPC, broker, id
 |---|---|---|
 | Workspace owner / local user | External principal; intent is not proof of identity | Supplies credentials, requests operations, chooses scopes, manages recovery. A UI confirmation alone cannot authorize an operation. |
 | ARK UI / desktop or CLI | Untrusted client | Can submit requests and display results. Must not hold policy authority or bypass broker checks. |
-| Local control API / IPC client | Untrusted input boundary | Messages, caller-supplied IDs, paths, operation names, and sizes require authentication, validation, and bounds. |
+| IPC client / caller-side stub | Untrusted client | Messages, caller-supplied IDs, paths, operation names, and sizes are attacker-controlled and must never be trusted as identity or authority. |
+| Local IPC server endpoint / request decoder | Security-critical boundary code (TCB) | Authenticates the peer, validates framing/schema, enforces bounds and replay/rate controls, and forwards only validated requests to the Broker. |
 | Development editor | Authorized-but-untrusted application | Receives plaintext for active editing; extensions/plugins and child processes may be malicious or compromised. |
 | Execution application (e.g. Apache) | Authorized-but-untrusted application | Receives only an explicitly granted resource/operation scope and duration. Can still copy/exfiltrate plaintext it receives. |
 | Local unprivileged attacker / same-user process | Adversary | May race processes, spoof weak identifiers, inspect accessible files, send IPC, tamper with user-owned state, or exhaust resources. |
@@ -81,7 +82,7 @@ The system boundary includes ARK applications, local control API/IPC, broker, id
 |---|---|---|
 | Z0 — External/untrusted inputs | User input, imported packages, external storage, environment variables, paths, IPC payloads, project files | Treat all values as attacker-controlled; parse with strict bounds and canonicalization. |
 | Z1 — User-facing clients | UI, CLI, editor, execution applications, plugins | No security authority. All requests are revalidated by trusted backend components. |
-| Z2 — Local request boundary | Control API, IPC endpoints, request decoding | Authenticate peer where relevant; bind evidence to a live process instance; enforce message size, rate, timeout, replay, and schema limits. |
+| Z2 — Local request boundary | Untrusted client messages crossing into the trusted local IPC server endpoint | Client payloads remain untrusted; server-side peer authentication, framing/schema decoding, bounds, replay/rate controls, and request validation are TCB responsibilities before Broker dispatch. |
 | Z3 — ARK authorization TCB | Broker, identity verifier, session service, policy engine | Sole decision path for protected operations; default deny; explicit subject/resource/operation/time scope. |
 | Z4 — ARK data/secret TCB | Crypto, key wrappers, storage parser, transaction engine, recovery/package verification | Strict secret lifetime, authenticated metadata, bounded parsing, atomic state transitions, no raw-key persistence. |
 | Z5 — OS enforcement boundary | Platform identity adapters, filesystem mediation, OS key store/secure hardware integrations | Must prove actual OS semantics; adapter evidence is not itself a policy decision. |
@@ -92,12 +93,13 @@ The system boundary includes ARK applications, local control API/IPC, broker, id
 ```mermaid
 flowchart TB
   U[User / external inputs] -->|untrusted intent and data| UI[ARK UI / CLI]
-  APP[Editor / Apache / plugins] -->|filesystem and IPC requests| IPC[Local Control API / IPC]
+  APP[Editor / Apache / plugins] -->|filesystem and IPC requests| IPC
   UI -->|untrusted requests| IPC
-  EXT[External package / storage media] -->|hostile bytes| PARSE[Bounded import / storage parsers]
+  EXT[External package / storage media] -->|hostile bytes| PARSE
 
   subgraph TCB[ARK trusted computing base — proposed]
-    IPC --> BR[Security Broker / request coordinator]
+    IPC[Local IPC server endpoint / bounded decoder] --> BR[Security Broker / request coordinator]
+    PARSE[Bounded import / storage parsers] --> PKG[Package / recovery verification]
     BR --> ID[Identity verification]
     BR --> SESS[Session validation]
     BR --> POL[Default-deny policy]
@@ -109,7 +111,6 @@ flowchart TB
     BR --> AUD[Secret-safe audit events]
     RT --> ST[Storage engine]
     ST <--> CR[Crypto / key management]
-    PARSE --> PKG[Package / recovery verification]
     PKG <--> CR
     PKG --> ST
   end
