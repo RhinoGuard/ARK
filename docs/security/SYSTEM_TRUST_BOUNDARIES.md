@@ -169,7 +169,7 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 
 1. UI submits a request to open a Workspace and/or perform a protected operation [Z1 → Z2]; the request identifies intent but is not authorization.
 2. IPC authenticates the peer where applicable, bounds the message, and rejects malformed or replayed requests.
-3. Identity verification obtains fresh platform evidence bound to a live process instance. Session validation independently checks or establishes the caller session; Workspace unlock must not implicitly create an authenticated session.
+3. Identity verification obtains fresh platform evidence bound to a live process instance. Session validation checks an already-established caller session; Workspace unlock MUST NOT create, authenticate, or elevate a session. If no valid authenticated session exists, the caller must complete the separate authentication/session-establishment flow before submitting the unlock request. Session establishment and Workspace unlock are distinct state transitions with separate outcomes and audit events.
 4. Policy/Broker performs a preflight decision: may this subject/session attempt this specific unlock or recovery operation now? Missing, stale, ambiguous, or unavailable evidence denies. This is distinct from proof that the password/key is correct.
 5. Crypto performs the password KDF under bounded, policy-controlled parameters and authenticates/unwraps the WMK wrapper. Credential correctness is established cryptographically, not by the preflight policy decision. KDF resource limits are owned by the KDF workstream.
 6. Storage validates header, format versions, authenticated metadata, manifest, and required journal state before exposing data.
