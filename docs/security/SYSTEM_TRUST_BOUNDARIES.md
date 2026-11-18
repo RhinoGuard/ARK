@@ -3,7 +3,7 @@
 **Status:** Proposed system-level security model; owner review required.  
 **Issue:** [#18 — E-04]  
 **Baseline:** ADR-0005 / PR #2 foundation branch, current architecture and security documents.  
-**Last updated:** 2026-11-19.
+**Last updated:** 2026-11-19 (E-04 hardening revision).
 
 > This document is a design and review artifact. It does not claim that the broker, crypto engine, storage engine, identity/session/policy services, filesystem mediation, recovery engine, audit sink, or runtime have been implemented. Only the Core foundation described by PR #2 is implemented on its branch; ADR-0005 itself remains Proposed and PR #2 is not yet merged.
 
@@ -26,10 +26,12 @@ Every material statement uses one of these status labels:
 | ADR-0005 | [PROPOSED] | Defines the initial workspace/Core foundation; subsystem-owner approval is still required. |
 | Default deny, least privilege, fail-closed, no path-as-authority | [ACCEPTED] requirements | These are required properties, not proof of enforcement. |
 | Broker, identity verification, sessions, policy engine | [PROPOSED] | Responsibilities are mapped; implementation and concrete APIs are absent. |
-| Crypto and key hierarchy | [PROPOSED] design baseline | Algorithm direction exists in crypto documentation; complete key lifecycle, storage protocol, nonce strategy, and APIs remain subject to dedicated decisions/review. |
+| Cryptographic primitive families | [ACCEPTED] direction | XChaCha20-Poly1305, Argon2id, HKDF-SHA-256, and OS CSPRNG are the selected primitive families; this does not approve a specific crate/version, parameter set, wire format, nonce allocator, or production implementation. |
+| Key hierarchy and cryptographic protocol | [PROPOSED]/[UNKNOWN] details | The conceptual hierarchy is documented; exact key lifecycle, wrapper formats, context encoding, nonce strategy, persistence, and APIs remain engineering/review gates. |
 | Encrypted storage, WAL, transactions, anti-rollback | [PROPOSED] requirements | No storage engine or finalized persistent format is established by PR #2. |
 | Filesystem mediation and OS backends | [PROPOSED] | Candidate mechanisms are not selected or proven. |
-| Recovery Key, Recovery File, Trusted Device | [PROPOSED] design | Three recovery routes are described; enrollment, wrapper format, lifecycle, and platform storage details remain open. |
+| Recovery route architecture | [ACCEPTED] direction | Three distinct routes are accepted: independent per-Workspace Recovery Key, Recovery File as authenticated wrapper/metadata backup (not an independent factor), and Trusted Device using a device-specific private key. |
+| Recovery protocols and lifecycle | [PROPOSED]/[UNKNOWN] details | Exact wrappers, enrollment, verification, rotation, revocation, platform key protection, and crash-safe transitions remain open. |
 | Audit event model/sink | [PROPOSED] | Events and secret-safety requirements are needed; tamper-resistance and availability semantics are unresolved. |
 
 ## 2. Security objectives and system boundary
@@ -126,7 +128,7 @@ flowchart TB
 | Workspace password / primary credential | Offline guessing, memory disclosure, accidental logging | Crypto + authentication owner | Entered through trusted UI path; passed only to KDF boundary; never persisted or logged. Detailed KDF risks are covered by Issue #10. |
 | Workspace Master Key (WMK) | Full workspace confidentiality compromise | Crypto | Generated from approved randomness; wrapped under an appropriate KEK; unwrapped only for bounded operations; never stored raw. Exact generation/wrapping contract remains [UNKNOWN]. |
 | Derived keys (project/file/chunk/metadata) | Cross-purpose reuse, scope confusion, memory leakage | Crypto | Derive with explicit domain separation and context binding; do not reuse across workspaces/purposes; minimize lifetime and copies. |
-| Recovery Key | Independent workspace recovery secret; theft enables recovery path abuse | Crypto + Recovery | Random independent 256-bit secret per Workspace; shown once at creation and deliberately acknowledged; no raw server-side storage. Encoding/checksum/rotation protocol remain [UNKNOWN]. |
+| Recovery Key | Independent workspace recovery secret; theft enables recovery path abuse | Crypto + Recovery | Random independent 256-bit secret per Workspace from OS CSPRNG; shown during setup with explicit safe-storage guidance and a recovery verification challenge; no raw server-side storage. Encoding/checksum/rotation protocol remain [UNKNOWN]. |
 | Recovery File | Wrapper substitution, metadata tampering, theft | Recovery + Crypto | Contains authenticated wrapped material and required metadata, never a raw WMK. It is a protected backup artifact, not an independent cryptographic factor. Bind it to the intended Workspace and version. |
 | Trusted Device private key | Device impersonation / unauthorized unwrap | Identity + Recovery + platform owner | Device-specific private key and proof of possession. Key storage, registration, backup, rotation, and revocation protocols remain [UNKNOWN]. Device display name is not identity proof. |
 | Package Key and package password | Cross-package compromise, password guessing, key substitution | Package + Crypto | Independent random Package Key per package; package-specific password wrapper; no reuse of Workspace password assumption. |
@@ -150,7 +152,7 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 4. Storage stages the initial authenticated metadata/manifest and empty workspace state.
 5. Recovery creates the per-workspace Recovery Key path, Recovery File wrapper metadata, and optional Trusted Device enrollment path. These are distinct routes; Recovery File is not an independent factor.
 6. Storage publishes the initial workspace atomically only after all required integrity checks and durable commit conditions are met.
-7. UI displays recovery material through a deliberate one-time flow; secrets must not enter logs, analytics, crash reports, or clipboard by default.
+7. UI presents the Recovery Key during setup with explicit safe-storage guidance and requires the documented recovery verification challenge before treating setup as complete. Avoid automatic clipboard writes; secrets must not enter logs, analytics, crash reports, telemetry, or support bundles. Exact display/re-display policy must be explicit and must not imply recoverability before verification succeeds.
 8. Audit records workspace creation and recovery-path configuration without recording secrets.
 
 **Enforcement:** Crypto owns key creation/wrapping; Storage owns staged durable publication; Recovery owns recovery artifacts; Broker/Policy own authorization for sensitive creation/configuration actions; Audit owns secret-safe event shape.
@@ -159,14 +161,16 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 
 ### F2 — Workspace open and unlock
 
-1. UI submits an open/unlock request [Z1 → Z2].
+**Decision boundary:** identity/session/policy authorization answers whether a caller may attempt an operation; the KDF and authenticated wrapper answer whether the supplied credential can unlock key material. These are separate checks. A successful unwrap is not an authorization grant, and a policy allow is not proof of credential possession.
+
+1. UI submits a request to open a Workspace and/or perform a protected operation [Z1 → Z2]; the request identifies intent but is not authorization.
 2. IPC authenticates the peer where applicable, bounds the message, and rejects malformed or replayed requests.
-3. Identity verifier obtains platform evidence bound to a live process instance; session service establishes/validates the required session.
-4. Policy evaluates the subject, target Workspace, requested operation, session, scope, and current policy version. Missing, stale, ambiguous, or unavailable evidence denies.
-5. Crypto performs the password KDF under bounded parameters and unwraps the WMK only after wrapper authentication. KDF memory/time limits and attacker-controlled configuration are owned by the KDF workstream.
+3. Identity verification obtains fresh platform evidence bound to a live process instance. Session validation independently checks or establishes the caller session; Workspace unlock must not implicitly create an authenticated session.
+4. Policy/Broker performs a preflight decision: may this subject/session attempt this specific unlock or recovery operation now? Missing, stale, ambiguous, or unavailable evidence denies. This is distinct from proof that the password/key is correct.
+5. Crypto performs the password KDF under bounded, policy-controlled parameters and authenticates/unwraps the WMK wrapper. Credential correctness is established cryptographically, not by the preflight policy decision. KDF resource limits are owned by the KDF workstream.
 6. Storage validates header, format versions, authenticated metadata, manifest, and required journal state before exposing data.
-7. Broker authorizes the operation and emits a secret-safe decision event.
-8. Runtime establishes only the requested mode/scope; Development or Execution mode is not itself authorization.
+7. Broker performs the operation-specific authorization needed to attach/open the Workspace and establish grants. Successful decryption alone grants no application access.
+8. Runtime establishes only the requested mode/scope after the required post-unlock decision; Development or Execution mode is not itself authorization. Audit emits separate secret-safe events for attempt decision, credential/wrapper outcome, and grant decision where appropriate.
 
 **Enforcement:** Identity, Session, Policy, Broker, Crypto, Storage, Runtime.
 
@@ -202,8 +206,10 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 
 ### F5 — Trusted Device registration and use
 
+**Key lifecycle constraint:** the accepted recovery baseline specifies device-generated private keys protected by an appropriate OS facility. Private-key import, export, synchronization, or cloud backup is outside this baseline until a separate threat-reviewed decision exists.
+
 1. User requests registration and completes the required authenticated/step-up flow.
-2. Device generates or imports a device-specific private key using a reviewed platform facility [exact facility UNKNOWN].
+2. Device generates a device-specific private key using an appropriate OS facility; the key is protected by that facility. Import/migration of private keys is not part of the accepted baseline and must not be implemented unless separately designed and approved.
 3. Registration binds a public-key identity to the intended account/Workspace and records lifecycle metadata.
 4. During recovery/unlock, the device proves possession of the private key using a challenge bound to the current request, Workspace, and protocol context.
 5. Recovery/Broker validates proof, device status, freshness, and revocation state before allowing the relevant key-wrapper operation.
@@ -262,6 +268,21 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 
 **Open point:** Whether audit sink unavailability blocks selected high-risk operations is not yet decided. It must not cause authorization to become more permissive.
 
+## 5A. Security-flow traceability matrix
+
+The following matrix makes source, destination, trust transition, and enforcement responsibility explicit. The detailed numbered flows remain normative for sequence and failure semantics.
+
+| Flow | Source | Destination | Trust transition | Enforcement responsibility |
+|---|---|---|---|---|
+| F1 Workspace creation | UI/CLI and user options (Z1/Z0) | Broker, Crypto, Recovery, Storage (Z3/Z4) | Untrusted intent → validated request → initialized protected workspace | Control API validates; Broker/Policy authorize; Crypto creates/wraps keys; Recovery provisions routes; Storage commits atomically; Audit records safe outcome. |
+| F2 Open/unlock | UI/client + credential input (Z1/Z0) | Identity, Session, Policy, Crypto, Storage, Runtime | Untrusted request → fresh caller evidence/session → preflight allow → authenticated unwrap → separately authorized grant | IPC/Identity establish caller evidence; Session validates; Policy/Broker authorize attempt and later use; Crypto verifies wrapper; Storage validates state; Runtime exposes only granted scope. |
+| F3 Development edit | Editor/plugin and filesystem request (Z1/Z0) | Broker, Filesystem, Runtime, Storage, Crypto | Untrusted process request → live process evidence → per-operation authorization → scoped plaintext operation | Platform/Identity attest process; Broker/Policy decide; Filesystem enforces supported OS operations; Runtime scopes working set; Storage/Crypto authenticate and commit. |
+| F4 Execution grant | User intent + target application (Z1/Z0) | Identity, Session, Policy, Broker, Runtime, Filesystem | Selected scope → verified app instance → bounded grant → mediated access | Identity/Platform verify process; Session validates; Policy/Broker issue/revoke grant; Runtime manages lifecycle; Filesystem backend enforces supported operations. |
+| F5 Trusted Device | Device enrollment/recovery request (Z0/Z1) | OS key facility, Identity, Recovery, Crypto, Broker | Untrusted enrollment → protected device key + proof of possession → workspace-bound wrapper operation | Platform facility protects private key; Identity verifies proof/freshness; Recovery binds device/workspace; Broker authorizes; Crypto unwraps intended wrapper. |
+| F6 Recovery Key/File | User-supplied secret or external file (Z0) | Recovery, Crypto, Storage | Untrusted input → bounded parsing/workspace binding → authenticated wrapper validation → staged restore | Recovery validates route/context; Crypto authenticates wrapper; Storage validates and atomically publishes; Broker authorizes; Audit records no secret. |
+| F7 Package export/import | Workspace state or hostile external package (Z4/Z0) | Package, Crypto, Storage | Protected snapshot → independent package envelope OR hostile bytes → bounded/authenticated import → committed state | Broker authorizes; Storage snapshots/stages; Package parses/verifies; Crypto authenticates; Storage atomically publishes. |
+| F8 Crash/restart | OS/process failure and persisted state (Z6/Z4) | Storage, Crypto, Recovery, Broker, Runtime, Audit | Interrupted/stale state → authenticated validation → last-known-good state or fail-closed | Storage transaction protocol; Crypto integrity; Recovery wrapper validation; Broker revalidates sessions/grants; Runtime re-establishes process state; Audit records safe transitions. |
+
 ## 6. Boundary register and required controls
 
 | ID | Boundary / transition | Primary threats | Required controls | Owning subsystem(s) | Status |
@@ -281,6 +302,8 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 
 ## 7. Threat coverage at system level
 
+Threat coverage is a design map, not proof of mitigation. A threat is addressed only when the owner supplies a concrete control contract and relevant adversarial tests demonstrate expected behavior on each supported platform.
+
 | Threat class | Representative scenarios | Primary mitigation owners | Residual risk / evidence needed |
 |---|---|---|---|
 | Spoofing / impersonation | Fake process identity, PID reuse, forged IPC peer, cloned device metadata | Identity, Platform, Broker, Recovery | Platform-specific race tests; proof-of-possession protocol review. |
@@ -295,6 +318,8 @@ All flows below are [PROPOSED] workflows unless explicitly marked otherwise. Eac
 | Supply-chain compromise | Malicious crate/build action/release artifact | Build/Release owner [TBD] | Dependency pinning/review, action pinning, provenance/signature policy; not covered by current Core CI alone. |
 
 ## 8. Fail-closed and audit requirements
+
+Fail-closed behavior must be enforced by the component that owns the protected operation; a UI warning, log entry, or Core enum is not enforcement. If a backend cannot mediate an operation, ARK must deny it or explicitly classify it outside the supported security guarantee.
 
 ### Fail-closed matrix
 
