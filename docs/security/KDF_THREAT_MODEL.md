@@ -1,11 +1,11 @@
 # ARK KDF Foundation Threat Model (Argon2id & HKDF-SHA-256)
 
-**Status:** Proposed Working Draft for Foundation Stabilization v1 (`[A-02]` / Issue #10) — Pending Team Review.  
+**Status:** Proposed Working Draft for Foundation Stabilization v1 (`[A-02]` / Issue #10) — Synchronized with Activity Deliverables.  
 **Scope:** Strictly scoped to the current key-derivation foundation (`ark-crypto` PR #3: `src/kdf/argon2id.rs`, `src/kdf/hkdf_sha256.rs`) and its integration boundary with `ark-core` (PR #2).  
 **Out of Scope:** Unimplemented AEAD chunk encryption, storage formats, WAL/journaling, recovery envelopes, and full-product security claims.
 
 > **Evidence & Honesty Rule:**
-> In accordance with `AGENTS.md` and `docs/architecture/SECURITY_INVARIANTS.md`, no threat mitigation is considered established or verified solely by virtue of being documented. Implemented mitigations must link to concrete code or executable tests. All gaps, unenforced parameters, and caller responsibilities are explicitly classified.
+> In accordance with `AGENTS.md` and `docs/architecture/SECURITY_INVARIANTS.md`, no threat mitigation is considered established or verified solely by virtue of being documented. Implemented mitigations must link to concrete code or executable tests. The existence of test code or audit deliverables is distinguished from integrated end-to-end verification.
 
 ---
 
@@ -67,7 +67,7 @@
 - **Existing Mitigation:** Password length bounded to `<= 1024` bytes (`Argon2Error::PasswordTooLong`).
 - **Mitigation Status:** `Partially Implemented` (password length bounded; `Argon2idConfig` fields are `pub` without ARK min/max clamp).
 - **Residual Risk & Owner:** Unbounded parameter execution. Internal `argon2::Params` limits do not replace ARK policy. **Owner:** Crypto (`[S-02]`, `[S-03]`) & Package Importer.
-- **Verification Evidence:** Bounded adversarial tests in `[A-04]`; parameter policy implementation in `[S-03]`.
+- **Verification Evidence:** Bounded negative tests drafted on branch `test/adversarial-negative-tests` (`[A-04]`); parameter policy implementation in `[S-03]`.
 
 ---
 
@@ -94,8 +94,8 @@
 - **Likelihood / Risk Rationale:** Low for current error enums (`Argon2Error`, `HkdfError` have static strings), but risk exists in caller error chains and debug formatters.
 - **Existing Mitigation:** Error types are unit enums with static text; KDF functions do not panic on invalid inputs.
 - **Mitigation Status:** `Implemented` for KDF primitives; `Caller Responsibility` for calling subsystems.
-- **Residual Risk & Owner:** Callers logging raw inputs. **Owner:** Core / Crypto / Security (`[A-04]` sentinel tests).
-- **Verification Evidence:** `src/kdf/argon2id.rs`, `src/kdf/hkdf_sha256.rs`; explicit sentinel leakage tests in `[A-04]`.
+- **Residual Risk & Owner:** Callers logging raw inputs. **Owner:** Core / Crypto / Security.
+- **Verification Evidence:** `src/kdf/argon2id.rs`, `src/kdf/hkdf_sha256.rs`; explicit sentinel leakage test suite drafted on branch `test/adversarial-negative-tests` (`[A-04]`).
 
 ---
 
@@ -105,11 +105,11 @@
 - **Preconditions:** Inclusion of unpinned or vulnerable crate versions in `Cargo.lock`.
 - **Attack Path:** Known vulnerability in upstream hashing or zeroization crate exploited to bypass protections.
 - **Impact:** Weakened encryption, side-channel leakage, or memory corruption.
-- **Likelihood / Risk Rationale:** Low-Medium; dependencies are standard RustCrypto crates, but independent advisory audit has not yet run.
+- **Likelihood / Risk Rationale:** Low-Medium; dependencies are standard RustCrypto crates.
 - **Existing Mitigation:** Dependency versions declared in `Cargo.toml`.
-- **Mitigation Status:** `Pending Independent Audit` (formal advisory inspection, Cargo.lock audit, and feature-flag verification are assigned to `[A-06]`).
-- **Residual Risk & Owner:** Transitive security advisories. **Owner:** Security (`[A-06]`).
-- **Verification Evidence:** Pending `[A-06]` security audit deliverable.
+- **Mitigation Status:** `Initial Review Drafted` (initial independent advisory and implementation review delivered in `docs/security/CRYPTO_DEPENDENCY_AND_IMPLEMENTATION_REVIEW.md` on branch `docs/crypto-security-review` (`[A-06]`); formal automated CI audit gate deferred).
+- **Residual Risk & Owner:** Transitive security advisories across release cycles. **Owner:** Security (`[A-06]`).
+- **Verification Evidence:** Initial review report delivered in `[A-06]`.
 
 ---
 
@@ -143,11 +143,11 @@
 
 ## 3. Prioritized Remediation & Issue Alignment
 
-| Priority | Action Item | Target Issue & Subsystem | Action Type |
+| Priority | Action Item | Target Issue & Subsystem | Status & Deliverable |
 | :--- | :--- | :--- | :---: |
-| **P1 — Must-Fix** | Enforce mandatory min/max policy bounds on `Argon2idConfig` (`memory_kib`, `iterations`, `lanes`) to prevent DoS and weak parameters. | `[S-02]`, `[S-03]` (`ark-crypto`) | Implementation |
-| **P1 — Must-Fix** | Integrate `ark-crypto` into root Cargo workspace with `#![forbid(unsafe_code)]` and strict workspace lints. | `[S-01]` (`ark-crypto`) | Implementation |
-| **P2 — Should-Fix** | Establish formalized, prefix-bound domain separation registry for HKDF contexts. | `[S-04]` (`ark-crypto`) | Implementation |
-| **P2 — Should-Fix** | Implement adversarial sentinel secret-leakage tests and bounded input tests. | `[A-04]` (`ark-core` / security) | Testing |
-| **P3 — Required Gate** | Complete independent dependency advisory review and Cargo.lock audit. | `[A-06]` (Security) | Audit |
-| **P3 — Architecture** | Define typed IKM wrapper at Core-to-Crypto boundary to reject raw passwords. | `[E-03]` (Systems Engineering) | Architecture |
+| **P1 — Must-Fix** | Enforce mandatory min/max policy bounds on `Argon2idConfig` (`memory_kib`, `iterations`, `lanes`) to prevent DoS and weak parameters. | `[S-02]`, `[S-03]` (`ark-crypto`) | Open (Crypto implementation) |
+| **P1 — Must-Fix** | Integrate `ark-crypto` into root Cargo workspace with `#![forbid(unsafe_code)]` and strict workspace lints. | `[S-01]` (`ark-crypto`) | Open (Crypto implementation) |
+| **P2 — Should-Fix** | Establish formalized, prefix-bound domain separation registry for HKDF contexts. | `[S-04]` (`ark-crypto`) | Open (Crypto implementation) |
+| **P2 — Should-Fix** | Implement adversarial sentinel secret-leakage tests and bounded input tests. | `[A-04]` (`ark-core` / security) | Test suite drafted on `test/adversarial-negative-tests` |
+| **P3 — Required Gate** | Complete independent dependency advisory review and Cargo.lock audit. | `[A-06]` (Security) | Initial audit report delivered on `docs/crypto-security-review` |
+| **P3 — Architecture** | Define typed IKM wrapper at Core-to-Crypto boundary to reject raw passwords. | `[E-03]` (Systems Engineering) | Open (Architecture contract) |
