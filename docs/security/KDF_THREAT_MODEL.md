@@ -179,7 +179,7 @@ This addendum supersedes the implementation descriptions above wherever they con
 
 ### 4.3 Verification status
 
-The API reconciliation above is based on source inspection and exact-head CI evidence. The candidate's Rust tests and Clippy passed CI #32/#39; the separate API-connected fuzz harness also completed one bounded smoke run in KDF fuzz smoke #4. This is not a sustained fuzz campaign or a cross-platform campaign.
+The API reconciliation above is based on source inspection and exact-head CI evidence. The candidate's Rust tests and Clippy passed CI #32/#42; the separate API-connected fuzz harness completed two bounded smoke runs, most recently KDF fuzz smoke #7 on head `be376f62ee454ca359f79c278f69fe3d882e3231`. This is not a sustained fuzz campaign or a cross-platform campaign.
 
 ### 4.4 Required follow-up
 
