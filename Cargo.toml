@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/ark-core"]
+members = ["crates/ark-core", "crates/ark-crypto"]
 resolver = "3"
 
 [workspace.package]

@@ -1,0 +1,17 @@
+[package]
+name = "ark-crypto"
+description = "Cryptographic key-derivation foundation for ARK."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+argon2 = "0.5"
+hkdf = "0.12"
+sha2 = "0.10"
+zeroize = { version = "1.7", features = ["derive"] }
+
+[lints]
+workspace = true
