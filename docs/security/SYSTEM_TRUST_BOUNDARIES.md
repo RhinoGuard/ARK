@@ -3,7 +3,7 @@
 **Status:** Proposed system-level security model; owner review required.  
 **Issue:** [#18 — E-04]  
 **Baseline:** ADR-0005 / PR #2 foundation branch, current architecture and security documents.  
-**Last updated:** 2026-11-19 (E-04 hardening revision).
+**Last updated:** 2026-11-20 (E-04 current KDF / Security Validation reconciliation).
 
 > This document is a design and review artifact. It does not claim that the broker, crypto engine, storage engine, identity/session/policy services, filesystem mediation, recovery engine, audit sink, or runtime have been implemented. The `ark-core` foundation is implemented on current `main` through PR #2 (merge commit `bafa677d6b42e7b04b736fcc386cd8e4ea4d9943`). ADR-0005 is Accepted for that narrow foundation scope. PR #3 remains open and its KDF work is not part of the current `main` baseline.
 
@@ -25,7 +25,7 @@ Every material statement uses one of these status labels:
 |---|---|---|
 | `ark-core` typed IDs, runtime-mode vocabulary, version types, fixed error taxonomy | [IMPLEMENTED] on `main` via PR #2 merge `bafa677` | Domain vocabulary exists. It is not identity, authorization, persistence, or runtime enforcement. |
 | ADR-0005 | [ACCEPTED] for the initial workspace/Core foundation | Acceptance records the workspace and `ark-core` baseline only; it does not approve or implement every future subsystem. |
-| Argon2id/HKDF KDF implementation | [IN PROGRESS] in PR #3 at head `d705efd` | KDF-only work is not merged into `main`; the PR remains subject to API/security review and branch synchronization. |
+| Argon2id/HKDF KDF implementation | [IN PROGRESS] in PR #3 and a separate staged candidate | PR #3 remains open at older head `d705efd`. A hardened API candidate exists on `fix/crypto-kdf-production-api-boundary` at `5520413`; stacked Security Validation PR #26 tests it at head `076c840`. The staged candidate has passing cross-platform Rust CI (#42) and bounded fuzz smoke (#7/#10), but neither branch is merged into `main`, and the current PR #3 head has not been replaced or synchronized. |
 | Default deny, least privilege, fail-closed, no path-as-authority | [ACCEPTED] requirements | These are required properties, not proof of enforcement. |
 | Broker, identity verification, sessions, policy engine | [PROPOSED] | Responsibilities are mapped; implementation and concrete APIs are absent. |
 | Cryptographic primitive families | [ACCEPTED] direction | XChaCha20-Poly1305, Argon2id, HKDF-SHA-256, and OS CSPRNG are the selected primitive families; this does not approve a specific crate/version, parameter set, wire format, nonce allocator, or production implementation. |
@@ -400,7 +400,7 @@ The following items are deliberately not resolved by this document. This model m
 ### Relationship to existing work
 
 - **ADR-0005 / PR #2:** this document consumes the accepted Core boundary and explicitly avoids treating Core types as security controls. ADR-0005 is Accepted for the initial workspace/Core foundation; it does not make planned subsystems implemented.
-- **Issue #10 — KDF threat model:** password guessing, Argon2 parameter/resource policy, KDF input contracts, and HKDF domain separation are covered by that narrower workstream. This document covers their system-level interfaces and DoS impact only. The KDF implementation and its current API contract remain subject to PR #3 and E-03 review.
+- **Issue #10 — KDF threat model:** password guessing, Argon2 parameter/resource policy, KDF input contracts, and HKDF domain separation are covered by that narrower workstream. This document covers their system-level interfaces and DoS impact only. The original threat model remains on its source branch; a current API-reconciled copy is included in the staged PR #26 branch at `docs/security/KDF_THREAT_MODEL.md`. The KDF implementation remains unmerged and subject to PR #3 / PR #26 / E-03 review.
 - **Issue #11 — security invariants traceability:** this document identifies system boundaries and owners; the invariant-to-code/test evidence matrix remains the dedicated deliverable for #11.
 - **Issue #12/#13 — adversarial tests and fuzzing:** test cases should be derived from the boundary and failure tables here, but this document does not claim those tests have run.
 - **Recovery design:** preserves three distinct routes: independent per-Workspace Recovery Key, Recovery File as an authenticated wrapper backup (not an independent factor), and Trusted Device using device-specific proof of possession.
@@ -420,3 +420,29 @@ This is a design artifact, so code-level validation is not applicable yet. Befor
 9. Verify each flow against the source/destination/trust-transition/enforcement matrix and ensure no protected path bypasses Broker/Policy or the relevant OS enforcement backend.
 
 **Acceptance statement:** E-04 can be considered document-complete when accountable subsystem owners review the artifact, the flow traceability and boundary controls are accepted, and every open decision has a named owner, concrete follow-up deliverable and acceptance condition, or explicit risk-accepted deferral. It does not certify that the proposed controls exist or that ARK is secure against the stated adversaries.
+
+## 12. Current KDF and Security Validation integration snapshot — 2026-11-20
+
+This section updates only the implementation-status snapshot; it does not change the proposed system architecture or imply that unimplemented subsystems exist.
+
+### KDF candidate and test evidence
+
+- PR #3 remains open against `main` at its older head `d705efd042ca31113eab3b2bdf63fb643fd27f8b`. Its formal review remains `CHANGES_REQUESTED`; its historical CI cannot be transferred to later code.
+- A separate hardened candidate is staged on `fix/crypto-kdf-production-api-boundary` at `552041395ee9097902eb6a7d1c934ed55b57a99f`. Security Validation work is stacked above it in [draft PR #26](https://github.com/RhinoGuard/ARK/pull/26), whose branch head at this snapshot is `076c84082a6259b9c1c724327bdc32ba614581b8`. PR #26 targets the staged Crypto branch, not `main`.
+- The staged production API enforces Argon2id per-call parameter bounds and a closed six-purpose HKDF path; raw context-based HKDF derivation is private. The current `HkdfIkm` wrapper still enforces shape/length, not source provenance or entropy. A caller can still misuse it with a sufficiently long human password; E-03 CCB-01/06 remain open.
+- [ARK CI #42](https://github.com/RhinoGuard/ARK/actions/runs/44624226086) passed on Rust source head `be376f62ee454ca359f79c278f69fe3d882e3231`: Ubuntu, Windows, macOS, Rust 1.85 MSRV, formatting, workspace build, Clippy, tests, and commit-message validation succeeded.
+- [KDF fuzz smoke #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096) passed on the same source head. It exercised the real public KDF API targets on a GitHub-hosted Ubuntu runner for bounded 20-second runs: 754 Argon2id executions and 4,633,173 HKDF executions, with no reported crash. This is not a sustained fuzz campaign or cross-platform fuzz result.
+- Later PR #26 commits updated review/threat-model documentation only; they did not modify the Rust KDF implementation or fuzz target logic. The latest branch head and its CI/fuzz reruns are tracked by PR #26 metadata.
+
+### Security Validation status
+
+- A-03's source matrix was located at `docs/security/TRACEABILITY_MATRIX.md` on `docs/security-traceability-matrix`; the earlier claim that the artifact was not located was a path-guessing error and is corrected in the staged reconciliation.
+- A-04's eight adversarial negative tests passed as part of the exact-head Rust CI run.
+- A-05 now has actual API-connected fuzz targets and successful bounded smoke evidence, replacing the old historical targets that simulated local validation rather than calling `ark-crypto`. Longer owner-reviewed fuzzing remains outstanding.
+- A-06's historical Ali report remains a preliminary report on the older PR #3 code. The new `docs/reviews/A06_CURRENT_KDF_REVIEW.md` is a Systems Engineering cross-check, not Ali's independent owner review or approval.
+
+### System-level implications
+
+The system-level trust boundaries remain **PROPOSED** until the responsible owners accept them and the corresponding components exist. KDF CI and smoke fuzzing do not implement the Broker, Identity, Session, Policy, Storage, Filesystem, Runtime, Recovery, Package, or Audit controls described in this document. The KDF primitive's per-call resource bounds do not supply global admission control for concurrent requests. CSPRNG generation ownership, platform parameter calibration, authenticated wrapper formats, nonce lifecycle, and service-level error mapping remain open engineering decisions.
+
+No branch was merged, no issue was closed, no owner review was submitted, and no repository protection setting was changed by this reconciliation.
