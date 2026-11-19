@@ -179,11 +179,11 @@ This addendum supersedes the implementation descriptions above wherever they con
 
 ### 4.3 Verification status
 
-The API reconciliation above is based on source inspection and branch comparison. It does **not** claim that Cargo tests, Clippy, benchmarks, fuzzing, or CI have run on the reconciliation branch. The KDF fuzz harness is now wired to the actual public API on a dependent branch, but A-05 remains unvalidated until a real fuzz run is recorded against an exact commit.
+The API reconciliation above is based on source inspection and exact-head CI evidence. The candidate's Rust tests and Clippy passed CI #32/#39; the separate API-connected fuzz harness also completed one bounded smoke run in KDF fuzz smoke #4. This is not a sustained fuzz campaign or a cross-platform campaign.
 
 ### 4.4 Required follow-up
 
 1. Keep this threat model synchronized with the final Crypto API selected by E-03 and PR #3.
 2. Preserve the distinction between IKM shape validation and provenance/entropy guarantees.
 3. Add caller-level resource admission controls when KDF calls are exposed to untrusted or concurrent requests.
-4. Record actual fuzz execution evidence before treating A-05 as validated.
+4. Extend the bounded smoke evidence into an owner-reviewed sustained fuzz campaign; retain exact toolchain, duration, corpus, coverage, RSS and crash triage.
