@@ -135,3 +135,25 @@ Draft PR #26 was opened against the Crypto boundary branch (not `main`) to trigg
 This static cross-check shows that the specific structural, Argon2 per-call bound, and HKDF context issues from Ali's original report have been addressed in a staged candidate, while IKM provenance and global resource controls remain residual concerns. The integration branch also needed restoration of missing KAT/integration test source.
 
 **Not ready for final security sign-off.** The candidate needs executed CI/testing, dependency audit evidence, bounded fuzz runs, and Ali's fresh independent review with Saleh's response. This document is authored as a Systems Engineering reconciliation; it must not be attributed to Ali or used as a substitute for his A-06 approval.
+
+
+## 8. Final CI evidence for the integrated candidate
+
+The earlier CI observations in Section 5 are historical snapshots. The subsequent correction was validated by GitHub Actions run **#32**:
+
+- Run: [ARK CI #32](https://github.com/RhinoGuard/ARK/actions/runs/44621678450)
+- Exact tested head: `27bc2e61a5e136aeb1febf147526fc2bc82b7d7c`
+- PR: [#26 — stacked draft validation](https://github.com/RhinoGuard/ARK/pull/26)
+- Base branch: `fix/crypto-kdf-production-api-boundary` at `552041395ee9097902eb6a7d1c934ed55b57a99f`
+
+All five workflow jobs completed successfully:
+
+1. Rust checks — Ubuntu: format, workspace build, Clippy and tests passed.
+2. Rust checks — Windows: format, workspace build, Clippy and tests passed.
+3. Rust checks — macOS: format, workspace build, Clippy and tests passed.
+4. Minimum supported Rust version — Rust 1.85: format, build, Clippy and tests passed.
+5. Conventional Commit message validation passed.
+
+The passing Rust test output on Ubuntu, macOS and Rust 1.85 included 10 Core tests, 6 KDF unit/KAT tests, 8 KDF integration tests and 8 adversarial negative tests (all passed; no failures). Windows also completed the same test step successfully.
+
+This closes the test-execution gap for the current Rust KDF/validation source at the stated SHA. It does **not** validate the standalone fuzz package, establish IKM entropy/provenance, supply CSPRNG ownership, create a cross-platform performance calibration, provide global concurrent Argon2 admission control, or constitute Ali/Saleh owner approval. No `cargo audit`, sustained fuzz run, benchmark, or platform resource-pressure campaign is included in this CI workflow.
