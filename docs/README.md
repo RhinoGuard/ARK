@@ -7,10 +7,17 @@ This documentation is the shared engineering baseline for human contributors and
 1. Repository-root AGENTS.md — mandatory rules for developers and AI agents.
 2. Repository-root DEVELOPMENT.md — developer workflow.
 3. architecture/ARCHITECTURE.md — system boundaries and data flows.
-4. architecture/SECURITY_INVARIANTS.md — properties that implementations must preserve.
-5. security/THREAT_MODEL.md — assets, actors, trust boundaries, threats, and explicit limitations.
-6. Relevant subsystem specifications.
-7. decisions/ — accepted and proposed Architecture Decision Records.
+4. architecture/CRATE_BOUNDARIES_AND_DEPENDENCIES.md — proposed Rust crate map and dependency direction.
+5. architecture/SECURITY_INVARIANTS.md — properties that implementations must preserve.
+6. security/THREAT_MODEL.md — assets, actors, trust boundaries, threats, and explicit limitations.
+7. Relevant subsystem specifications.
+8. decisions/ — accepted and proposed Architecture Decision Records.
+
+## Contributor references
+
+- development/DEVELOPER_GUIDE.md — implementation status and engineering sequence.
+- development/TEAM_WORKFLOW.md — ownership and review workflow.
+- development/COMMIT_CONVENTIONS.md — commit header and retained-history rules.
 
 ## Subsystem specifications
 
