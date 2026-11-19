@@ -11,7 +11,7 @@ use ark_crypto::kdf::{
 
 const SENTINEL_PASSWORD: &[u8] = b"CONFIDENTIAL_ARK_ROOT_PASSPHRASE_SENTINEL_#9999";
 const SENTINEL_SALT: &[u8] = b"UNTRUSTED_ATTACKER_CONTROLLED_SALT_123456";
-const SENTINEL_IKM: &[u8] = b"CONFIDENTIAL_ARK_IKM_SENTINEL";
+const SENTINEL_IKM: &[u8] = b"SECRET_IKM";
 
 #[test]
 fn argon2_rejects_empty_and_oversized_passwords() {
