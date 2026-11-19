@@ -30,7 +30,7 @@ This documentation is the shared engineering baseline for human contributors and
 ## Security validation artifacts
 
 - `security/KDF_THREAT_MODEL.md` — KDF threat analysis, including the 2026-11-20 API reconciliation addendum.
-- `reviews/ALI_SECURITY_VALIDATION_RECONCILIATION.md` — evidence-based reconciliation of Ali's A-01–A-06 artifacts with the current KDF API; not an owner approval.
+- `reviews/ALI_SECURITY_VALIDATION_RECONCILIATION.md` — evidence-based reconciliation of Ali's A-01–A-06 artifacts with the current KDF API; not an owner approval.\n- `reviews/A03_TRACEABILITY_MATRIX_RECONCILIATION.md` — Systems Engineering cross-check of Ali's invariant traceability matrix against the hardened Core/KDF API.\n- `reviews/A06_CURRENT_KDF_REVIEW.md` — current KDF finding-by-finding security reconciliation; not Ali's independent review or approval.
 
 ## Decision status vocabulary
 
