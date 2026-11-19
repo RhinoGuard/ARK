@@ -1,0 +1,57 @@
+name: KDF fuzz smoke
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/kdf-fuzz-smoke.yml"
+      - "fuzz/**"
+      - "crates/ark-crypto/Cargo.toml"
+      - "crates/ark-crypto/src/kdf/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kdf-fuzz-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bounded-fuzz-smoke:
+    name: Bounded KDF fuzz smoke (nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install nightly toolchain
+        run: |
+          rustup toolchain install nightly --profile minimal --component rust-src --component llvm-tools-preview
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      - name: Check fuzz package formatting
+        run: cargo fmt --manifest-path fuzz/Cargo.toml --all -- --check
+
+      - name: Compile fuzz targets
+        run: cargo +nightly check --manifest-path fuzz/Cargo.toml --bins
+
+      - name: Run bounded Argon2id fuzz smoke
+        run: cargo +nightly fuzz run fuzz_argon2id -- -max_total_time=20 -rss_limit_mb=1024 -max_len=1040 -timeout=10
+
+      - name: Run bounded HKDF fuzz smoke
+        run: cargo +nightly fuzz run fuzz_hkdf -- -max_total_time=20 -rss_limit_mb=1024 -max_len=1024 -timeout=10
+
+      - name: Upload fuzz artifacts and corpus
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kdf-fuzz-smoke-${{ github.sha }}
+          path: |
+            fuzz/artifacts/**
+            fuzz/corpus/**
+          if-no-files-found: ignore
