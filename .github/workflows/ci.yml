@@ -114,7 +114,7 @@ jobs:
       - name: Audit locked dependency graph
         run: |
           set -o pipefail
-          cargo +stable audit --locked 2>&1 | tee cargo-audit-report.txt
+          cargo +stable audit 2>&1 | tee cargo-audit-report.txt
       - name: Upload audit report
         if: always()
         uses: actions/upload-artifact@v4
