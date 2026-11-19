@@ -190,7 +190,7 @@ The executed test output included 10 Core tests, 6 KDF unit/KAT tests, 8 KDF int
 1. **Do not state that the current API prevents raw passwords from reaching HKDF.** The normative rule in Section 2 remains mandatory, but the current `HkdfIkm` constructors cannot enforce provenance. This is a real residual API-policy gap for CCB-01/06 and must be resolved with Crypto owner input before downstream services rely on it.
 2. The six-purpose API and test-only KAT boundary are now implemented in the staged candidate, but PR #26 is stacked on an unmerged Crypto branch. The exact accepted Crypto base and final source SHA must be settled before the candidate can be treated as the repository's integrated contract.
 3. No Core dependency on `ark-crypto` is introduced. The current boundary remains one-way and Core stays crypto-agnostic.
-4. A-05 fuzz targets call the actual public KDF APIs, but no fuzz run has been performed as part of CI #32. Fuzz execution and crash triage remain outstanding.
+4. A-05 fuzz targets call the actual public KDF APIs. Separate [KDF fuzz smoke run #4](https://github.com/RhinoGuard/ARK/actions/runs/44623186546) passed on head `4ec4de8d23201d7f2806b08cdccfb979b19fc0fc`: Argon2id completed 590 runs / 21 seconds and HKDF completed 3,963,943 runs / 21 seconds with no reported crash. This is a bounded smoke sample only; a sustained owner-reviewed fuzz campaign and broader crash triage remain outstanding.
 5. Issue #17 and PR #23 remain open; this reconciliation is evidence for owner review, not a closure or approval record.
 
 ### 12.4 Decisions still requiring explicit owners
