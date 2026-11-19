@@ -1,6 +1,6 @@
 # ARK KDF Fuzzing Harness
 
-**Status:** API-connected fuzz targets implemented; execution evidence is pending.
+**Status:** API-connected targets and a bounded smoke run are validated on the staged candidate; a sustained owner-reviewed fuzz campaign remains pending.
 
 This package invokes the actual public `ark-crypto` KDF APIs. It does not simulate the validation logic locally.
 
@@ -29,3 +29,24 @@ The Argon2id target uses the current minimum production memory cost (16 MiB) and
 ## Evidence discipline
 
 The workflow has been added but its first run has not yet been observed. Do not report A-05 as validated until that workflow actually passes and its run ID/head are recorded. Before security acceptance, also perform a longer owner-reviewed fuzz session and record exact commit SHA, Rust/nightly version, cargo-fuzz version, command, duration, corpus, coverage, crash count, and triage outcome. Convert every discovered crash into a minimized regression test before acceptance.
+
+
+## Recorded smoke evidence
+
+One successful bounded smoke run is available:
+
+- Workflow: [KDF fuzz smoke #4](https://github.com/RhinoGuard/ARK/actions/runs/44623186546)
+- Tested commit: `4ec4de8d23201d7f2806b08cdccfb979b19fc0fc`
+- Environment: GitHub-hosted Ubuntu runner; `rustc 1.102.0-nightly (65ce8611f 2026-11-18)`; `cargo-fuzz 0.13.2`.
+- Exit status: both targets completed successfully; no crash was reported; the corpus/artifact upload step passed.
+
+| Target | Bounded duration | Executions | Final libFuzzer counters | Peak RSS |
+|---|---:|---:|---:|---:|
+| `fuzz_argon2id` | 21 s | 590 | `cov: 338`, `ft: 346`, corpus 7 / 105 B | 329 MiB |
+| `fuzz_hkdf` | 21 s | 3,963,943 | `cov: 101`, `ft: 115`, corpus 25 / 1,916 B | 468 MiB |
+
+Both commands used `-max_total_time=20`, `-rss_limit_mb=1024`, a 10-second per-input timeout, and target-specific maximum input lengths (1,040 bytes for Argon2id; 1,024 bytes for HKDF). The observed wall-time is 21 seconds per target due to libFuzzer's stop/report boundary.
+
+The uploaded artifact is [`kdf-fuzz-smoke-49235ff289a11bfc49d19ebe0632eabf00dc3369`](https://github.com/RhinoGuard/ARK/actions/runs/44623186546/artifacts/14578157451), SHA-256 `8b3c01cf26d8e85c18107d0046dec2469833f1afb33f71bfa165e6aa54d285c3`.
+
+This result is a single 20-second smoke sample, not a sustained campaign, cross-platform fuzz result, cryptographic proof, or assurance that no latent crash exists. Retain the original run logs and artifact as the reproducibility record.
