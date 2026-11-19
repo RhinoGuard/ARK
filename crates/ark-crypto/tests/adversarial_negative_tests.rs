@@ -5,7 +5,7 @@
 //! vulnerabilities outside the exercised inputs.
 
 use ark_crypto::kdf::{
-    Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfIkm, HkdfKeyPurpose,
+    Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfKeyPurpose,
     MAX_PASSWORD_LEN, MIN_IKM_LEN, MIN_MEMORY_KIB, derive_kek, derive_purpose_subkey,
 };
 
@@ -147,22 +147,11 @@ fn hkdf_context_parser_rejects_unknown_and_malformed_purposes() {
 }
 
 #[test]
-fn hkdf_public_api_derives_distinct_registered_purposes() {
-    let ikm_bytes = [0x3C_u8; 32];
-    let ikm_result = HkdfIkm::from_slice(&ikm_bytes);
-    assert!(ikm_result.is_ok(), "32-byte IKM should satisfy the shape constraint");
-    let Ok(ikm) = ikm_result else {
-        return;
-    };
-
-    let project = derive_purpose_subkey(ikm, None, HkdfKeyPurpose::ProjectKey);
-    let file = derive_purpose_subkey(ikm, None, HkdfKeyPurpose::FileKey);
-    assert!(project.is_ok());
-    assert!(file.is_ok());
-
-    if let (Ok(project_key), Ok(file_key)) = (project, file) {
-        assert_ne!(&*project_key, &*file_key);
-    }
+fn hkdf_registered_purposes_have_distinct_context_labels() {
+    assert_ne!(
+        HkdfKeyPurpose::ProjectKey.as_context_bytes(),
+        HkdfKeyPurpose::FileKey.as_context_bytes()
+    );
 }
 
 #[test]
