@@ -209,8 +209,7 @@ fn hkdf_parser_accepts_exactly_all_registered_contexts() {
 
     for purpose in purposes {
         let canonical = purpose.as_context_bytes();
-        let parsed = HkdfContext::parse(canonical)
-            .expect("every registered purpose must parse");
+        let parsed = HkdfContext::parse(canonical).expect("every registered purpose must parse");
         assert_eq!(parsed.as_bytes(), canonical);
 
         let mut mutated = canonical.to_vec();
