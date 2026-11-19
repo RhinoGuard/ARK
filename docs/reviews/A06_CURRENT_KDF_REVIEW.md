@@ -161,10 +161,10 @@ This closes the test-execution gap for the current Rust KDF/validation source at
 
 ## 9. Bounded fuzz smoke evidence
 
-Although the normal workspace CI does not include the standalone fuzz package, a dedicated [KDF fuzz smoke run #4](https://github.com/RhinoGuard/ARK/actions/runs/44623186546) built and ran both actual public-API targets on head `4ec4de8d23201d7f2806b08cdccfb979b19fc0fc`. The environment used `rustc 1.102.0-nightly (65ce8611f 2026-11-18)` and `cargo-fuzz 0.13.2`.
+Although the normal workspace CI does not include the standalone fuzz package, a dedicated [KDF fuzz smoke run #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096) built and ran both actual public-API targets on head `be376f62ee454ca359f79c278f69fe3d882e3231`; the initial run #4 also passed. The environment used `rustc 1.102.0-nightly (65ce8611f 2026-11-18)`, `cargo 1.102.0-nightly (f93c676e3 2026-11-15)` and `cargo-fuzz 0.13.2`.
 
-- Argon2id: 590 executions / 21 seconds; libFuzzer coverage 338, feature count 346, final in-run corpus 7 entries / 105 bytes; peak RSS 329 MiB.
-- HKDF: 3,963,943 executions / 21 seconds; coverage 101, feature count 115, final in-run corpus 25 entries / 1,916 bytes; peak RSS 468 MiB.
-- Both targets exited successfully, no crash was reported, and the corpus/artifact upload succeeded. Artifact SHA-256: `8b3c01cf26d8e85c18107d0046dec2469833f1afb33f71bfa165e6aa54d285c3`.
+- Argon2id: 754 executions / 21 seconds; libFuzzer coverage 338, feature count 346, final in-run corpus 7 entries / 103 bytes; peak RSS 330 MiB.
+- HKDF: 4,633,173 executions / 21 seconds; coverage 101, feature count 115, final in-run corpus 25 entries / 2,156 bytes; peak RSS 464 MiB.
+- Both targets exited successfully, no crash was reported, and the corpus/artifact upload succeeded. Artifact: [KDF fuzz smoke #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096/artifacts/14577108336); SHA-256 `de2ba58bd23b5b8d5cf7707d96b4a87b7ddf10a064149a478de0d8b3ed62f78a`.
 
 These results are a single bounded smoke sample per target, not a sustained campaign, cross-platform fuzz run, or resource-pressure test. They do not change the residual IKM provenance, service admission-control, dependency-audit, or platform-calibration findings.
