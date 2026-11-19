@@ -116,7 +116,7 @@ For PR #3's old head `d705efd...`, GitHub Actions run `44580168927` completed su
 
 These successes apply **only** to that exact old PR head. They do not transfer to `5520413...` or `bae0315...`.
 
-At the time of this reconciliation, the latest Security Validation integration branch had no workflow runs or commit statuses. No local `cargo fmt`, `cargo build`, `cargo clippy`, `cargo test`, `cargo audit`, benchmark or fuzz command was executed. The new tests and fuzz targets are source changes only until CI or a real environment runs them.
+Draft PR #26 was opened against the Crypto boundary branch (not `main`) to trigger validation of the stacked candidate. GitHub Actions run `44619564386` (`ARK CI`) was observed in `in_progress` for head `280d4abb38c53db14382e02e919fb9a020a649e4` at the time this report was updated. No conclusion is claimed until the run completes. No local `cargo fmt`, `cargo build`, `cargo clippy`, `cargo test`, `cargo audit`, benchmark or fuzz command was executed. The new tests and fuzz targets remain unvalidated until the exact-head CI and dedicated fuzz execution finish.
 
 ## 6. Remaining risk register
 
