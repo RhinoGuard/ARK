@@ -5,8 +5,8 @@
 //! vulnerabilities outside the exercised inputs.
 
 use ark_crypto::kdf::{
-    Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfKeyPurpose,
-    MAX_PASSWORD_LEN, MIN_IKM_LEN, MIN_MEMORY_KIB, derive_kek,
+    Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfKeyPurpose, MAX_PASSWORD_LEN,
+    MIN_IKM_LEN, MIN_MEMORY_KIB, derive_kek,
 };
 
 const SENTINEL_PASSWORD: &[u8] = b"CONFIDENTIAL_ARK_ROOT_PASSPHRASE_SENTINEL_#9999";
@@ -157,7 +157,10 @@ fn hkdf_registered_purposes_have_distinct_context_labels() {
 #[test]
 fn hkdf_error_formatting_does_not_disclose_short_ikm() {
     let result = HkdfIkm::from_slice(SENTINEL_IKM);
-    assert!(result.is_err(), "short sentinel IKM unexpectedly passed the length check");
+    assert!(
+        result.is_err(),
+        "short sentinel IKM unexpectedly passed the length check"
+    );
     let Err(error) = result else {
         return;
     };
