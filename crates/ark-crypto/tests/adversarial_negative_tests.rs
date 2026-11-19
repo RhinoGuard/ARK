@@ -6,7 +6,7 @@
 
 use ark_crypto::kdf::{
     Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfKeyPurpose,
-    MAX_PASSWORD_LEN, MIN_IKM_LEN, MIN_MEMORY_KIB, derive_kek, derive_purpose_subkey,
+    MAX_PASSWORD_LEN, MIN_IKM_LEN, MIN_MEMORY_KIB, derive_kek,
 };
 
 const SENTINEL_PASSWORD: &[u8] = b"CONFIDENTIAL_ARK_ROOT_PASSPHRASE_SENTINEL_#9999";
