@@ -19,9 +19,8 @@ pub use hkdf_sha256::{
 /// Length of ARK's initial symmetric key material, in bytes.
 pub const KEY_LEN: usize = 32;
 
-
 #[cfg(test)]
 pub(super) use argon2id::derive_argon2id_rfc9106_kat;
 
 #[cfg(test)]
-pub(super) use hkdf_sha256::{hkdf_sha256_rfc5869_expand, HKDF_SHA256_MAX_OUTPUT_LEN};
+pub(super) use hkdf_sha256::{HKDF_SHA256_MAX_OUTPUT_LEN, hkdf_sha256_rfc5869_expand};
