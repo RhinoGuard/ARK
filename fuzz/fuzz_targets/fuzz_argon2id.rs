@@ -1,7 +1,7 @@
 #![no_main]
 
 use ark_crypto::kdf::{
-    Argon2idConfig, DEFAULT_LANES, DEFAULT_ITERATIONS, MIN_MEMORY_KIB, derive_kek,
+    Argon2idConfig, DEFAULT_ITERATIONS, DEFAULT_LANES, MIN_MEMORY_KIB, derive_kek,
 };
 use libfuzzer_sys::fuzz_target;
 
@@ -16,8 +16,7 @@ fuzz_target!(|data: &[u8]| {
 
     let password_len = data.len() - 16;
     let (password, salt) = data.split_at(password_len);
-    let Ok(config) = Argon2idConfig::new(MIN_MEMORY_KIB, DEFAULT_ITERATIONS, DEFAULT_LANES)
-    else {
+    let Ok(config) = Argon2idConfig::new(MIN_MEMORY_KIB, DEFAULT_ITERATIONS, DEFAULT_LANES) else {
         return;
     };
 
