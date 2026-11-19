@@ -99,8 +99,9 @@ fn argon2_revalidates_publicly_constructible_cost_parameters() {
 #[test]
 fn argon2_error_formatting_does_not_disclose_password_or_salt() {
     let oversized = vec![0x41_u8; MAX_PASSWORD_LEN + 1];
-    let Err(error) = derive_kek(&oversized, SENTINEL_SALT, Argon2idConfig::default()) else {
-        assert!(false, "oversized password unexpectedly derived a key");
+    let result = derive_kek(&oversized, SENTINEL_SALT, Argon2idConfig::default());
+    assert!(result.is_err(), "oversized password unexpectedly derived a key");
+    let Err(error) = result else {
         return;
     };
 
@@ -148,8 +149,9 @@ fn hkdf_context_parser_rejects_unknown_and_malformed_purposes() {
 #[test]
 fn hkdf_public_api_derives_distinct_registered_purposes() {
     let ikm_bytes = [0x3C_u8; 32];
-    let Ok(ikm) = HkdfIkm::from_slice(&ikm_bytes) else {
-        assert!(false, "32-byte IKM should satisfy the shape constraint");
+    let ikm_result = HkdfIkm::from_slice(&ikm_bytes);
+    assert!(ikm_result.is_ok(), "32-byte IKM should satisfy the shape constraint");
+    let Ok(ikm) = ikm_result else {
         return;
     };
 
@@ -165,8 +167,9 @@ fn hkdf_public_api_derives_distinct_registered_purposes() {
 
 #[test]
 fn hkdf_error_formatting_does_not_disclose_short_ikm() {
-    let Err(error) = HkdfIkm::from_slice(SENTINEL_IKM) else {
-        assert!(false, "short sentinel IKM unexpectedly passed the length check");
+    let result = HkdfIkm::from_slice(SENTINEL_IKM);
+    assert!(result.is_err(), "short sentinel IKM unexpectedly passed the length check");
+    let Err(error) = result else {
         return;
     };
 
