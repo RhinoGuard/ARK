@@ -18,4 +18,3 @@ pub use hkdf_sha256::{
 
 /// Length of ARK's initial symmetric key material, in bytes.
 pub const KEY_LEN: usize = 32;
-
