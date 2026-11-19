@@ -157,3 +157,14 @@ All five workflow jobs completed successfully:
 The passing Rust test output on Ubuntu, macOS and Rust 1.85 included 10 Core tests, 6 KDF unit/KAT tests, 8 KDF integration tests and 8 adversarial negative tests (all passed; no failures). Windows also completed the same test step successfully.
 
 This closes the test-execution gap for the current Rust KDF/validation source at the stated SHA. It does **not** validate the standalone fuzz package, establish IKM entropy/provenance, supply CSPRNG ownership, create a cross-platform performance calibration, provide global concurrent Argon2 admission control, or constitute Ali/Saleh owner approval. No `cargo audit`, sustained fuzz run, benchmark, or platform resource-pressure campaign is included in this CI workflow.
+
+
+## 9. Bounded fuzz smoke evidence
+
+Although the normal workspace CI does not include the standalone fuzz package, a dedicated [KDF fuzz smoke run #4](https://github.com/RhinoGuard/ARK/actions/runs/44623186546) built and ran both actual public-API targets on head `4ec4de8d23201d7f2806b08cdccfb979b19fc0fc`. The environment used `rustc 1.102.0-nightly (65ce8611f 2026-11-18)` and `cargo-fuzz 0.13.2`.
+
+- Argon2id: 590 executions / 21 seconds; libFuzzer coverage 338, feature count 346, final in-run corpus 7 entries / 105 bytes; peak RSS 329 MiB.
+- HKDF: 3,963,943 executions / 21 seconds; coverage 101, feature count 115, final in-run corpus 25 entries / 1,916 bytes; peak RSS 468 MiB.
+- Both targets exited successfully, no crash was reported, and the corpus/artifact upload succeeded. Artifact SHA-256: `8b3c01cf26d8e85c18107d0046dec2469833f1afb33f71bfa165e6aa54d285c3`.
+
+These results are a single bounded smoke sample per target, not a sustained campaign, cross-platform fuzz run, or resource-pressure test. They do not change the residual IKM provenance, service admission-control, dependency-audit, or platform-calibration findings.
