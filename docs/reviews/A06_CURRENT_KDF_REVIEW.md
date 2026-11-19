@@ -13,9 +13,9 @@ That report is valuable historical evidence, but it is not a review of the prese
 
 - Original PR #3: `feature/crypto-kdf-implementation`, head `d705efd042ca31113eab3b2bdf63fb643fd27f8b` (still open when checked).
 - Hardened Crypto candidate: `fix/crypto-kdf-production-api-boundary`, head `552041395ee9097902eb6a7d1c934ed55b57a99f`.
-- Current Security Validation integration branch: `feat/security-validation-kdf-fuzz-integration`, head `bae0315e6f8891df43e1d4986d8c1440b81de021`, stacked on the hardened Crypto candidate.
+- Current Security Validation integration branch: `feat/security-validation-kdf-fuzz-integration`, latest head `076c84082a6259b9c1c724327bdc32ba614581b8`, stacked on the hardened Crypto candidate.
 
-The integration branch adds the missing internal KAT module and restores the public-API KDF integration tests. It has not been built or tested here. No claim is made that its source has passed compilation.
+The integration branch restores the missing internal KAT module and public-API KDF integration tests. [ARK CI #46](https://github.com/RhinoGuard/ARK/actions/runs/44624894201) passed on the latest exact head, including formatting, workspace build, Clippy and tests across Ubuntu, Windows, macOS and Rust 1.85 MSRV. [KDF fuzz smoke #10](https://github.com/RhinoGuard/ARK/actions/runs/44624894126) also passed on that exact head. No local Cargo commands were executed.
 
 ## 2. Executive disposition
 
@@ -45,7 +45,7 @@ The production `derive_kek` path revalidates the config at the boundary even whe
 
 **Current disposition:** The original unbounded per-call configuration defect is **mitigated in the candidate**. This does not impose a global budget across concurrent derivations. At maximum settings, concurrent requests can still consume substantial memory and CPU. Admission control, queue limits, rate limiting, cancellation behavior and target-platform calibration belong to the caller/service/runtime boundary.
 
-**Remaining evidence:** Execute the negative suite and test the exact integrated candidate; calibrate latency/memory on supported targets before final product-policy approval.
+**Remaining evidence:** The A-04 negative suite passed in CI #46. Calibrate latency/memory on supported targets before final product-policy approval; CI functional success is not performance calibration.
 
 ### SEC-KDF-02 — Crypto crate outside the root workspace
 
@@ -114,27 +114,27 @@ For PR #3's old head `d705efd...`, GitHub Actions run `44580168927` completed su
 - Rust checks on Windows;
 - Rust checks on Ubuntu.
 
-These successes apply **only** to that exact old PR head. They do not transfer to `5520413...` or `bae0315...`.
+These successes apply **only** to that exact old PR #3 head. They do not transfer to `5520413...` or the stacked PR #26 branch.
 
-Draft PR #26 was opened against the Crypto boundary branch (not `main`) to trigger validation of the stacked candidate. GitHub Actions run `44619564386` (`ARK CI`) was observed in `in_progress` for head `280d4abb38c53db14382e02e919fb9a020a649e4` at the time this report was updated. No conclusion is claimed until the run completes. No local `cargo fmt`, `cargo build`, `cargo clippy`, `cargo test`, `cargo audit`, benchmark or fuzz command was executed. The new tests and fuzz targets remain unvalidated until the exact-head CI and dedicated fuzz execution finish.
+PR #26 is Draft and targets the Crypto boundary branch, not `main`. On its latest exact head `076c84082a6259b9c1c724327bdc32ba614581b8`, [ARK CI #46](https://github.com/RhinoGuard/ARK/actions/runs/44624894201) passed all five jobs (Ubuntu, Windows, macOS, MSRV Rust 1.85 and commit-message validation); formatting, workspace build, Clippy and tests passed. The dedicated [KDF fuzz smoke #10](https://github.com/RhinoGuard/ARK/actions/runs/44624894126) also passed both bounded API-connected targets and artifact upload on that exact head. No local `cargo fmt`, `cargo build`, `cargo clippy`, `cargo test`, `cargo audit`, benchmark or fuzz command was executed. CI/fuzz evidence is GitHub Actions evidence only.
 
 ## 6. Remaining risk register
 
 | Priority | Remaining item | Owner / boundary | Exit evidence |
 |---|---|---|---|
-| P1 | Build/test/Clippy exact integrated KDF + validation candidate; verify unit KAT and integration suites compile | Crypto + Security Validation | Successful CI for exact head; no inherited old-head checks |
+| P1 | Reconcile the staged candidate into Crypto owner's final PR and obtain final review on that ref | Crypto + Security Validation | Candidate checks pass in CI #46; PR #3 remains old and has not inherited those checks |
 | P1 | Fresh independent A-06 review and Crypto owner response | Ali / Saleh | Ali reviews current diff; Saleh responds to each finding |
 | P1 | Resolve IKM source/provenance contract | Crypto + Systems (E-03) | Explicit owner decision and call-site contract |
-| P1 | Run bounded KDF fuzz sessions and triage artifacts | Ali / Security Validation | Exact commit, toolchain, cargo-fuzz version, commands, duration, corpus, coverage and crash triage |
+| P1 | Extend bounded KDF fuzz smoke into sustained owner-reviewed campaign and triage artifacts | Ali / Security Validation | Smoke #10 recorded; longer duration, broader corpus/coverage and owner crash triage remain outstanding |
 | P2 | Run `cargo audit` and establish repeatable dependency advisory CI | Crypto + Security/CI | Archived report and automated gate |
 | P2 | Calibrate Argon2id settings on target platforms | Crypto + Platform | Reproducible benchmark data and approved latency/resource budget |
 | P2 | Add service-level admission control when exposed to untrusted concurrent requests | Runtime/Service owner | Bounded queue/concurrency tests and rate-limit policy |
 
 ## 7. Final disposition
 
-This static cross-check shows that the specific structural, Argon2 per-call bound, and HKDF context issues from Ali's original report have been addressed in a staged candidate, while IKM provenance and global resource controls remain residual concerns. The integration branch also needed restoration of missing KAT/integration test source.
+This static cross-check shows that the specific structural, Argon2 per-call bound, and HKDF context issues from Ali's original report have been addressed in a staged candidate; CI #46 and bounded fuzz smoke #10 pass on the latest candidate head. IKM provenance, global resource controls, dependency audit, parameter calibration and owner reviews remain residual concerns. The missing KAT/integration test source has been restored and executed in CI.
 
-**Not ready for final security sign-off.** The candidate needs executed CI/testing, dependency audit evidence, bounded fuzz runs, and Ali's fresh independent review with Saleh's response. This document is authored as a Systems Engineering reconciliation; it must not be attributed to Ali or used as a substitute for his A-06 approval.
+**Not ready for final security sign-off.** The candidate still needs an exact PR #3 synchronization/owner review, dependency audit evidence, sustained fuzzing, parameter calibration, and Ali's fresh independent review with Saleh's response. This document is authored as a Systems Engineering reconciliation; it must not be attributed to Ali or used as a substitute for his A-06 approval.
 
 
 ## 8. Final CI evidence for the integrated candidate
@@ -168,3 +168,18 @@ Although the normal workspace CI does not include the standalone fuzz package, a
 - Both targets exited successfully, no crash was reported, and the corpus/artifact upload succeeded. Artifact: [KDF fuzz smoke #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096/artifacts/14577108336); SHA-256 `de2ba58bd23b5b8d5cf7707d96b4a87b7ddf10a064149a478de0d8b3ed62f78a`.
 
 These results are a single bounded smoke sample per target, not a sustained campaign, cross-platform fuzz run, or resource-pressure test. They do not change the residual IKM provenance, service admission-control, dependency-audit, or platform-calibration findings.
+
+
+## 10. Latest exact-head validation — 2026-11-20
+
+The previous Sections 8–9 retain earlier passing runs as history. The latest verification is:
+
+- PR #26 head: `076c84082a6259b9c1c724327bdc32ba614581b8`.
+- [ARK CI #46](https://github.com/RhinoGuard/ARK/actions/runs/44624894201): all five jobs passed, including workspace build, Clippy, tests on Ubuntu/Windows/macOS and MSRV Rust 1.85, plus commit validation.
+- [KDF fuzz smoke #10](https://github.com/RhinoGuard/ARK/actions/runs/44624894126): both actual API-connected targets were formatted, compiled and run successfully; artifact upload succeeded; no crash was reported.
+- Toolchain: rustc/cargo `1.102.0-nightly`; cargo-fuzz `0.13.2`.
+- Argon2id: 428 runs / 21 seconds, coverage 338, features 348, peak RSS 330 MiB.
+- HKDF: 2,718,772 runs / 21 seconds, coverage 101, features 115, peak RSS 466 MiB.
+- Artifact ID `14579133051`; SHA-256 `2d80c6fa8c221d41b1705dffd5bcbc032a604d7127fc8ef0e3d80ac910dff210`.
+
+This evidence validates only the exercised candidate paths and a short hosted-Ubuntu smoke. It does not establish dependency cleanliness, long-duration robustness, platform calibration, IKM provenance, service-level rate controls, or owner approval.
