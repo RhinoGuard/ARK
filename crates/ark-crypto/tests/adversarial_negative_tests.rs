@@ -176,13 +176,15 @@ fn hkdf_error_formatting_does_not_disclose_short_ikm() {
 #[test]
 fn argon2_salt_debug_redacts_sentinel_bytes() {
     let sentinel = b"ARGON2_SALT_SENTINEL_2026";
-    let salt = ark_crypto::kdf::Argon2Salt::from_slice(sentinel)
-        .expect("the test sentinel must satisfy the salt policy");
+    let salt = match ark_crypto::kdf::Argon2Salt::from_slice(sentinel) {
+        Ok(salt) => salt,
+        Err(error) => panic!("valid test salt was rejected: {error}"),
+    };
 
     let debug = format!("{salt:?}");
     assert!(debug.contains("Argon2Salt"));
     assert!(debug.contains(&format!("len: {}", sentinel.len())));
-    assert!(!debug.contains(std::str::from_utf8(sentinel).unwrap()));
+    assert!(!debug.contains(String::from_utf8_lossy(sentinel).as_ref()));
 }
 
 #[test]
@@ -193,7 +195,7 @@ fn hkdf_ikm_debug_redacts_sentinel_bytes() {
     let debug = format!("{ikm:?}");
     assert!(debug.contains("HkdfIkm"));
     assert!(debug.contains("len: 32"));
-    assert!(!debug.contains(std::str::from_utf8(&sentinel).unwrap()));
+    assert!(!debug.contains(String::from_utf8_lossy(&sentinel).as_ref()));
 }
 
 #[test]
@@ -209,7 +211,10 @@ fn hkdf_parser_accepts_exactly_all_registered_contexts() {
 
     for purpose in purposes {
         let canonical = purpose.as_context_bytes();
-        let parsed = HkdfContext::parse(canonical).expect("every registered purpose must parse");
+        let parsed = match HkdfContext::parse(canonical) {
+            Ok(parsed) => parsed,
+            Err(error) => panic!("registered HKDF purpose was rejected: {error}"),
+        };
         assert_eq!(parsed.as_bytes(), canonical);
 
         let mut mutated = canonical.to_vec();
