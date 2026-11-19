@@ -93,6 +93,36 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --all-features --locked
 
+  cargo-audit:
+    name: Audit locked Rust dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install stable Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Install cargo-audit
+        run: cargo +stable install cargo-audit --locked
+      - name: Record audit toolchain
+        run: |
+          rustc +stable --version
+          cargo +stable --version
+          cargo-audit --version
+      - name: Audit locked dependency graph
+        run: |
+          set -o pipefail
+          cargo +stable audit --locked 2>&1 | tee cargo-audit-report.txt
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-audit-${{ github.sha }}
+          path: cargo-audit-report.txt
+          if-no-files-found: ignore
+
   rust-msrv:
     name: Minimum supported Rust version
     runs-on: ubuntu-latest
