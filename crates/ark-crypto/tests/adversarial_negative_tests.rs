@@ -172,3 +172,72 @@ fn hkdf_error_formatting_does_not_disclose_short_ikm() {
     assert!(!display.contains(sentinel.as_ref()));
     assert!(!debug.contains(sentinel.as_ref()));
 }
+
+#[test]
+fn argon2_salt_debug_redacts_sentinel_bytes() {
+    let sentinel = b"ARGON2_SALT_SENTINEL_2026";
+    let salt = ark_crypto::kdf::Argon2Salt::from_slice(sentinel)
+        .expect("the test sentinel must satisfy the salt policy");
+
+    let debug = format!("{salt:?}");
+    assert!(debug.contains("Argon2Salt"));
+    assert!(debug.contains(&format!("len: {}", sentinel.len())));
+    assert!(!debug.contains(std::str::from_utf8(sentinel).unwrap()));
+}
+
+#[test]
+fn hkdf_ikm_debug_redacts_sentinel_bytes() {
+    let sentinel = [b'K'; 32];
+    let ikm = HkdfIkm::from_key_array(&sentinel);
+
+    let debug = format!("{ikm:?}");
+    assert!(debug.contains("HkdfIkm"));
+    assert!(debug.contains("len: 32"));
+    assert!(!debug.contains(std::str::from_utf8(&sentinel).unwrap()));
+}
+
+#[test]
+fn hkdf_parser_accepts_exactly_all_registered_contexts() {
+    let purposes = [
+        HkdfKeyPurpose::WorkspaceKey,
+        HkdfKeyPurpose::ProjectKey,
+        HkdfKeyPurpose::FileKey,
+        HkdfKeyPurpose::MetadataKey,
+        HkdfKeyPurpose::AuditKey,
+        HkdfKeyPurpose::RecoveryKey,
+    ];
+
+    for purpose in purposes {
+        let canonical = purpose.as_context_bytes();
+        let parsed = HkdfContext::parse(canonical)
+            .expect("every registered purpose must parse");
+        assert_eq!(parsed.as_bytes(), canonical);
+
+        let mut mutated = canonical.to_vec();
+        let last = mutated.len() - 1;
+        mutated[last] ^= 0x01;
+        assert!(matches!(
+            HkdfContext::parse(&mutated),
+            Err(HkdfError::InvalidContextFormat)
+        ));
+    }
+}
+
+#[test]
+fn hkdf_parser_rejects_malformed_and_oversized_contexts() {
+    assert!(matches!(
+        HkdfContext::parse(b"ARK/v1/\xff"),
+        Err(HkdfError::InvalidContextFormat)
+    ));
+    assert!(matches!(
+        HkdfContext::parse(b"ARK/v"),
+        Err(HkdfError::InvalidContextFormat)
+    ));
+
+    let mut oversized = b"ARK/v1/".to_vec();
+    oversized.resize(257, b'x');
+    assert!(matches!(
+        HkdfContext::parse(&oversized),
+        Err(HkdfError::ContextTooLong)
+    ));
+}
