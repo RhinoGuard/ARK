@@ -44,7 +44,7 @@ This is a real API-connected harness, but no fuzz execution has been performed b
 - Saleh remains the Crypto implementation owner.
 - The replacement fuzz branch is dependent on the pending KDF boundary branch. It must not be merged independently into `main` before the Crypto dependency is accepted.
 - Do not merge the old `feat/security-testing-framework` or `feat/kdf-fuzzing-harness` wholesale.
-- Two new review artifacts were added to this branch: `docs/reviews/A03_TRACEABILITY_MATRIX_RECONCILIATION.md` and `docs/reviews/A06_CURRENT_KDF_REVIEW.md`. The KAT and KDF integration test source omissions were restored. No PR was opened, no review was submitted, no issue state was changed, and no branch was merged.
+- Two new review artifacts were added: `docs/reviews/A03_TRACEABILITY_MATRIX_RECONCILIATION.md` and `docs/reviews/A06_CURRENT_KDF_REVIEW.md`. The KAT and KDF integration test source omissions were restored. Draft PR #26 was opened against `fix/crypto-kdf-production-api-boundary` to validate the stacked candidate; it is not targeted at `main`. No review was submitted, no issue state was changed, and no branch was merged.
 
 ## 5. Test-source recovery and validation boundary
 
