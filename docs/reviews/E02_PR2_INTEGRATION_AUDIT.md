@@ -140,3 +140,46 @@ PR [#20](https://github.com/RhinoGuard/ARK/pull/20) currently targets `feat/rust
 - The successful PR #2 CI run verifies the recorded Rust workflow jobs; it does not prove every security invariant is implemented.
 - Static inspection and branch comparison do not constitute a cryptographic audit, formal verification, or production-readiness certification.
 - No repository ruleset, branch, existing review, or merge state was modified as part of this audit artifact.
+
+
+## 10. Incremental revalidation — 2026-11-20
+
+This addendum does not rewrite the 2026-11-19 historical audit baseline. It corrects the downstream integration snapshot after the staged KDF and Security Validation work was advanced.
+
+### 10.1 PR #3 and staged Crypto candidate are different refs
+
+- PR #3 remains open against `main` at its old head `d705efd042ca31113eab3b2bdf63fb643fd27f8b`. Its prior formal review remains `CHANGES_REQUESTED`. The old PR #3 CI success applies only to that exact older head.
+- A separate branch, `fix/crypto-kdf-production-api-boundary`, is staged at `552041395ee9097902eb6a7d1c934ed55b57a99f`. It hardens the production KDF API boundary but is not itself merged or a replacement PR for Saleh's PR #3.
+- [Draft PR #26](https://github.com/RhinoGuard/ARK/pull/26) adds KAT/test recovery, adversarial tests, fuzz integration and current review reconciliations on top of that staged Crypto branch. PR #26 is open and deliberately targets `fix/crypto-kdf-production-api-boundary`, not `main`. Its head at this addendum is `076c84082a6259b9c1c724327bdc32ba614581b8`.
+
+### 10.2 Updated candidate evidence
+
+The following checks passed on staged code, not on PR #3's old head:
+
+- [ARK CI #42](https://github.com/RhinoGuard/ARK/actions/runs/44624226086), source head `be376f62ee454ca359f79c278f69fe3d882e3231`: all five jobs succeeded (Ubuntu, Windows, macOS, Rust 1.85 MSRV and Conventional Commit validation). Rust formatting, workspace build, Clippy and tests passed.
+- [ARK CI #46](https://github.com/RhinoGuard/ARK/actions/runs/44624894201), latest PR #26 head `076c84082a6259b9c1c724327bdc32ba614581b8`: all five jobs succeeded.
+- [KDF fuzz smoke #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096), source head `be376f62ee454ca359f79c278f69fe3d882e3231`: real API-connected Argon2id and HKDF targets completed bounded 20-second runs without a reported crash.
+- [KDF fuzz smoke #10](https://github.com/RhinoGuard/ARK/actions/runs/44624894126), latest PR #26 head `076c84082a6259b9c1c724327bdc32ba614581b8`: formatting, compilation, both fuzz targets and artifact upload all succeeded; no crash was reported. It used nightly Rust `1.102.0-nightly`, Cargo `1.102.0-nightly`, and cargo-fuzz `0.13.2`. Argon2id completed 428 runs / 21 seconds (coverage 338, features 348, RSS 330 MiB); HKDF completed 2,718,772 runs / 21 seconds (coverage 101, features 115, RSS 466 MiB). The artifact was uploaded as ID `14579133051`, SHA-256 `2d80c6fa8c221d41b1705dffd5bcbc032a604d7127fc8ef0e3d80ac910dff210`.
+
+These are staged-candidate results only. They do not transfer to PR #3 until its branch is updated to the reviewed implementation and exact-head CI/review are repeated.
+
+### 10.3 Reclassification of historical Security Validation findings
+
+The original Section 6 statements about `feat/kdf-fuzzing-harness` remain correct for that historical branch: its KDF targets simulate bounds and do not call the real `ark-crypto` derivation API. They are no longer a description of the replacement candidate in Draft PR #26:
+
+- A-03 traceability artifact was located at `docs/security/TRACEABILITY_MATRIX.md` on `docs/security-traceability-matrix`; a path-guessing error in the earlier integration note was corrected.
+- A-04: eight adversarial negative tests are part of the staged `ark-crypto` tests and passed the candidate CI runs.
+- A-05: replacement fuzz targets call actual `derive_kek`, `HkdfContext::parse`, `HkdfIkm::from_slice`, and `derive_purpose_subkey` entry points. Bounded smoke runs #7 and #10 succeeded. Sustained fuzzing and broader triage remain outstanding.
+- A-06: Ali's original report remains historical/preliminary and predates this candidate. The new A-06 document is authored as a Systems Engineering cross-check; Ali's fresh independent review and Saleh's response have not been recorded.
+
+### 10.4 E-04 and governance status
+
+- PR #20 is closed without merge. The clean, current-`main` replacement is PR #24, whose trust-boundary document now contains a dated candidate/KDF evidence snapshot. PR #24 remains open and owner review is outstanding.
+- The ruleset finding remains unchanged: the active ruleset still has zero required approving reviews and an empty required-status-check list. This addendum does not change repository policy.
+- PR #22 remains documentation-only and open. It does not itself approve, merge, or close any dependent work.
+
+### 10.5 Current E-02 disposition
+
+**PR #2 remains successfully merged and has no blocking defect identified in the audited Core scope. E-02 remains CHANGES REQUIRED for downstream Foundation integration and governance until PR #3 is synchronized and owner-reviewed, PR #26 is reconciled with the Crypto owner branch, E-03/E-04 owner decisions are recorded, and the repository review/CI policy gap is addressed through an explicit administrator decision.**
+
+No issue was closed, no review/approval was submitted, no repository rule was changed, and no branch was merged by this addendum.
