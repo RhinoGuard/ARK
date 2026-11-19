@@ -12,6 +12,7 @@ use ark_crypto::kdf::{
 const SENTINEL_PASSWORD: &[u8] = b"CONFIDENTIAL_ARK_ROOT_PASSPHRASE_SENTINEL_#9999";
 const SENTINEL_SALT: &[u8] = b"SECRET_SALT_123";
 const SENTINEL_IKM: &[u8] = b"SECRET_IKM";
+const VALID_TEST_SALT: &[u8] = b"0123456789abcdef";
 
 #[test]
 fn argon2_rejects_empty_and_oversized_passwords() {
@@ -61,7 +62,7 @@ fn argon2_revalidates_publicly_constructible_cost_parameters() {
         lanes: 1,
     };
     assert!(matches!(
-        derive_kek(SENTINEL_PASSWORD, SENTINEL_SALT, below_floor),
+        derive_kek(SENTINEL_PASSWORD, VALID_TEST_SALT, below_floor),
         Err(Argon2Error::InvalidParameters)
     ));
 
@@ -71,7 +72,7 @@ fn argon2_revalidates_publicly_constructible_cost_parameters() {
         lanes: 1,
     };
     assert!(matches!(
-        derive_kek(SENTINEL_PASSWORD, SENTINEL_SALT, excessive_memory),
+        derive_kek(SENTINEL_PASSWORD, VALID_TEST_SALT, excessive_memory),
         Err(Argon2Error::InvalidParameters)
     ));
 
@@ -81,7 +82,7 @@ fn argon2_revalidates_publicly_constructible_cost_parameters() {
         lanes: 1,
     };
     assert!(matches!(
-        derive_kek(SENTINEL_PASSWORD, SENTINEL_SALT, excessive_iterations),
+        derive_kek(SENTINEL_PASSWORD, VALID_TEST_SALT, excessive_iterations),
         Err(Argon2Error::InvalidParameters)
     ));
 
@@ -91,7 +92,7 @@ fn argon2_revalidates_publicly_constructible_cost_parameters() {
         lanes: u32::MAX,
     };
     assert!(matches!(
-        derive_kek(SENTINEL_PASSWORD, SENTINEL_SALT, excessive_lanes),
+        derive_kek(SENTINEL_PASSWORD, VALID_TEST_SALT, excessive_lanes),
         Err(Argon2Error::InvalidParameters)
     ));
 }
