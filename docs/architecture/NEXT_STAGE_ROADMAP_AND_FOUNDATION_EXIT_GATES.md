@@ -2,7 +2,7 @@
 
 **Status:** Proposed engineering roadmap; owner review required.  
 **Issue:** [#19 — E-05](https://github.com/RhinoGuard/ARK/issues/19)  
-**Baseline checked:** 2026-11-19  
+**Baseline checked:** 2026-11-20  
 **Source of truth:** current `main`, accepted ADRs, open PRs, subsystem specifications, and owner-assigned issues.
 
 > This roadmap sequences work; it is not an implementation claim or a delivery-date promise. A document, branch, closed issue, or passing isolated test is not by itself evidence that a subsystem is implemented or ready for production.
@@ -22,11 +22,11 @@
 
 | Workstream | Current evidence | Remaining gate |
 |---|---|---|
-| E-02 Core post-merge integration audit | PR #22 | Independent review and merge; then close Issue #16. |
-| E-03 Core-to-Crypto contract | PR #23 | Crypto and Security Validation owner review; settle or explicitly defer CCB-01..CCB-08 decisions; merge accepted contract; close Issue #17. |
-| E-04 system trust boundaries | PR #24 (clean branch from current `main`) | Owner review, current baseline verification, merge; close Issue #18. Earlier stacked PR #20 was superseded and closed, not merged. |
-| Crypto KDF foundation | PR #3, owner `ZeroTrace79`, open at the baseline head recorded in PR metadata | Resolve existing `CHANGES_REQUESTED` review, synchronize branch with current `main`, close API/security gaps, obtain independent review, and rerun CI on the final head. Not yet on `main`. |
-| Security Validation A-01..A-06 | Ali's outputs are on separate branches; integration not complete | Port only relevant artifacts onto clean current-main branches. Do not merge old Foundation history wholesale. Ensure KDF fuzzing invokes real `ark-crypto` APIs. |
+| E-02 Core post-merge integration audit | PR #22 | Audit document refreshed with the 2026-11-20 staged KDF/Security Validation evidence; independent review and merge remain required before Issue #16 can close. |
+| E-03 Core-to-Crypto contract | PR #23 | Contract reconciled against staged KDF API and latest bounded fuzz evidence; CCB-01/06 provenance, CCB-03 CSPRNG ownership, CCB-04 calibration, CCB-05 error mapping and CCB-07 metadata remain open. Crypto and Security Validation owner review plus explicit decision records are required before merge/Issue #17 closure. |
+| E-04 system trust boundaries | PR #24 (clean branch from current `main`) | Trust-boundary artifact now includes a 2026-11-20 staged KDF/Security Validation snapshot; owner review, acceptance of flow/boundary controls, merge, and Issue #18 closure remain required. Earlier stacked PR #20 was superseded and closed, not merged. |
+| Crypto KDF foundation | PR #3, owner `ZeroTrace79`, still open at older head `d705efd`; separate hardened candidate `fix/crypto-kdf-production-api-boundary` at `5520413` | The separate candidate's staged code and tests passed CI #42 and bounded fuzz smoke #7 only through stacked PR #26; this is not a replacement for updating/synchronizing PR #3. Resolve its existing `CHANGES_REQUESTED` review, settle IKM provenance and owner decisions, obtain independent review, and rerun CI on the final PR #3 head. Not yet on `main`. |
+| Security Validation A-01..A-06 | Ali's historical outputs remain on their source branches; new integration work is in stacked Draft PR #26, based on the unmerged Crypto candidate | A-03 source matrix located and reconciled; A-04 eight adversarial tests pass CI; A-05 real API-connected fuzz targets passed two bounded smoke runs. A-06 still needs Ali's fresh independent review. PR #26 is not main-based and does not replace owner approval. Do not merge old Foundation history wholesale. |
 | Next-stage architecture decisions | Several accepted directions; detailed protocols remain open | Dedicated ADRs and subsystem-owner reviews per stage below. |
 
 The current repository ruleset requires a PR and linear history, but the retrieved ruleset has **zero required approving reviews and an empty required-status-check list**. Until that policy is deliberately changed, the team must enforce the stricter review/CI requirements manually. This roadmap does not change repository settings.
@@ -340,11 +340,11 @@ No person should approve their own implementation. The author of a security-sens
 
 | Risk | Severity | Gate / mitigation | Owner |
 |---|---|---|---|
-| Crypto PR branch is behind current main and retains formal changes-requested review | High | Synchronize, answer review findings, fresh review and CI on final head | Crypto |
+| PR #3 remains behind the current integration baseline and retains formal changes-requested review; a separate hardened candidate is staged but not merged | High | Port/reconcile the hardened API into the owner-maintained PR #3, synchronize against main, answer every formal finding, obtain fresh independent review and run CI on final head | Crypto |
 | KAT/conformance helpers exposed in production API | High | Restrict to test-only/internal scope; preserve KAT coverage | Crypto |
 | HKDF raw IKM API permits callers to mistake length for trusted provenance | High | Resolve in E-03, narrow production API, test misuse boundaries | Crypto + Systems Engineering |
 | HKDF custom purpose grammar is wider than documented closed purpose set | Medium/High | Decide and enforce closed or formally extensible namespace | Crypto + Systems Engineering |
-| Current KDF fuzzing targets simulate checks rather than exercise crypto implementation | High | Connect targets to real `ark-crypto` APIs and record actual runs | Security Validation + Crypto |
+| Historical Ali KDF fuzz targets simulated local checks rather than exercise crypto implementation | High (historical issue; replacement available) | Replacement API-connected targets in Draft PR #26 call real `ark-crypto`; bounded smoke #7 passed. Keep the issue open until owner review and a longer campaign/corpus triage are accepted | Security Validation + Crypto |
 | Security Validation branches contain old Foundation history | Medium | Rebuild clean main-based branches; port only relevant owner artifacts | Security Validation |
 | Ruleset does not require approvals or status checks | High (governance) | Enforce manually; create separate policy proposal and obtain repository-owner decision | Repository admins / Systems Engineering |
 | Storage nonce/transaction/crash semantics are not specified | Critical before Storage implementation | Dedicated ADRs, fault injection, independent review before shipping data path | Storage + Crypto |
@@ -379,3 +379,41 @@ Foundation exit does **not** claim:
 - product-ready GUI, signed installer, or production release.
 
 These are later-stage deliverables with their own owners, ADRs, tests, threat models, and independent reviews.
+
+
+## 10. Current status reconciliation — 2026-11-20
+
+This addendum updates the baseline snapshot and selected exit-gate evidence. It does not change the gate requirements or declare Foundation exit.
+
+### Current exact integration state
+
+| Work item | Latest verified state | Exit status |
+|---|---|---|
+| E-02 / PR #22 / Issue #16 | Audit artifact records the PR #2 merge and governance gap; its 2026-11-20 addendum reconciles the staged KDF/Security Validation state. PR remains open against `main`. | Pending independent review and merge. |
+| E-03 / PR #23 / Issue #17 | Contract branch at `4464f346d33169ab782bf668b3cdea5d10c19a85`; latest contract addendum records implementation and bounded fuzz evidence. CI #47 passed on this document head. | **PROPOSED**. CCB owner decisions and reviews remain open. |
+| E-04 / PR #24 / Issue #18 | Clean `main`-based PR branch; trust model now includes the current staged KDF/test/fuzz snapshot. | Proposed; Security/Crypto/Storage/Platform/Recovery reviews remain required. |
+| E-05 / PR #25 / Issue #19 | This roadmap is updated with current branch and evidence status. | Proposed; review and acceptance remain required. |
+| Crypto / PR #3 | Still open at older head `d705efd...`; formal review remains `CHANGES_REQUESTED`. | Not integrated. Do not transfer passing CI from the separate staged candidate to this head. |
+| Staged Crypto candidate | `fix/crypto-kdf-production-api-boundary` at `5520413...`; validation additions in Draft PR #26. | Separate stack; not merged to `main`. |
+| PR #26 / Security Validation | Draft, stacked on the Crypto candidate. Current PR head and latest run details must be refreshed before any merge decision. | Code CI and fuzz smoke have passed on staged source heads; Ali's A-06 owner review and Saleh's Crypto response remain open. |
+
+### Exact staged validation evidence
+
+- [ARK CI #42](https://github.com/RhinoGuard/ARK/actions/runs/44624226086) passed all five jobs on Rust source head `be376f62ee454ca359f79c278f69fe3d882e3231`, including Ubuntu, Windows, macOS, Rust 1.85 MSRV, formatting, build, Clippy, tests, and commit-message validation.
+- [KDF fuzz smoke #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096) passed on the same code head. It used nightly Rust `1.102.0-nightly`, Cargo `1.102.0-nightly`, and cargo-fuzz `0.13.2`; bounded runs completed with 754 Argon2id executions and 4,633,173 HKDF executions over 21 seconds per target with no reported crash.
+- The exact staged branch subsequently received documentation-only evidence updates. Its Rust KDF/test source did not change after the successful code CI/fuzz head. The latest branch-specific workflow status is maintained in PR #26; a successful staged check does not make the branch part of `main`.
+
+### Foundation exit remains blocked
+
+The following are still mandatory before F0–F5 can be accepted together:
+
+1. E-02, E-03, E-04 and E-05 need independent owner review and merge/acceptance on current `main`.
+2. PR #3's older formal `CHANGES_REQUESTED` review must be resolved on its final synchronized head. The staged PR #26 candidate must be reconciled with the Crypto owner's branch; it cannot independently substitute for PR #3.
+3. CCB-01/06: decide how IKM source/provenance is enforced; minimum length is not entropy or provenance and the current borrowed `HkdfIkm` wrapper is not sufficient evidence of source class.
+4. CCB-03/04/05/07: decide CSPRNG/salt generation ownership, calibrate Argon2 per supported platform, define the Core/service error mapping, and design authenticated persisted KDF metadata/migration before dependent formats.
+5. A-06 needs Ali's fresh independent review; Saleh must respond to the current Crypto findings. Neither role is replaced by Systems Engineering reconciliation documents.
+6. A-05 has only bounded 20-second smoke evidence; sustain/extend fuzzing and retain crash/corpus triage before wider acceptance.
+7. No `cargo audit`, target-platform KDF benchmark/resource campaign, global concurrent Argon2 admission-control validation, AEAD/wrapping/nonce lifecycle, storage, identity, policy, broker, filesystem enforcement, or recovery implementation is evidenced by these KDF checks.
+8. Repository rules still require zero approving reviews and no required status checks. That governance gap remains a separate administrator decision and must be manually enforced meanwhile.
+
+**Decision:** Foundation exit is **not approved** by this roadmap update. The current progress validates selected staged KDF tests and fuzz smoke, not full Foundation integration, owner acceptance, or production security.
