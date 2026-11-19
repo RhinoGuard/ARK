@@ -12,7 +12,7 @@
 - `docs/crypto-security-review`: A-06 report dated 2026-11-17, scoped to earlier PR #3 source commits `c7322e2..3fdabeb`.
 - Current PR #3 remains open at `d705efd042ca31113eab3b2bdf63fb643fd27f8b`; the existing formal review remains `CHANGES_REQUESTED`.
 - Current KDF boundary branch: `fix/crypto-kdf-production-api-boundary`, head `552041395ee9097902eb6a7d1c934ed55b57a99f`.
-- The original KDF fuzz targets in `feat/kdf-fuzzing-harness` explicitly simulate checks and do not call `ark-crypto`.
+- The original KDF fuzz targets in `feat/kdf-fuzzing-harness` simulate checks and do not call `ark-crypto`; the replacement targets in this integration branch call the actual API.
 - Issues #9–#14 are closed in GitHub. Closed state is recorded as workflow status only; it does not override contradictory source evidence or establish that the present API has been validated.
 
 ## 2. A-01 through A-06 reconciliation
@@ -22,9 +22,9 @@
 | A-01 — Core API test reconciliation | #9 | **Closed historically; current acceptance not revalidated here.** The old branch is diverged and contains duplicated Foundation history. Port only Ali-owned test changes and verify against current Core API if further changes are required. |
 | A-02 — KDF threat model | #10 | **Implemented — needs synchronization.** Existing threat model is useful but contains stale descriptions of raw `derive_subkey`, unbounded Argon2 configuration, and open-ended context. An API reconciliation addendum has been added in this branch; owner review remains outstanding. |
 | A-03 — invariant traceability | #11 | **Not revalidated.** The branch name exists, but the expected traceability file was not located at the initially guessed path. Do not infer acceptance from issue closure. Locate the exact artifact and verify every mapping against current code/tests before claiming current validity. |
-| A-04 — adversarial negative tests | #12 | **Ported — not executed / not validated.** Added `crates/ark-crypto/tests/adversarial_negative_tests.rs` using the current public Argon2id and typed HKDF APIs. It covers password/salt/config bounds, empty/short IKM, unknown purposes, purpose separation, and error-format redaction. Cargo execution is still required. |
-| A-05 — KDF fuzzing | #13 | **Original implementation not valid API fuzzing.** Existing KDF targets only simulate validation and depend on `ark-core`, not `ark-crypto`. A replacement harness now calls the real public Argon2id and HKDF APIs in this dependent branch. **Implemented — not executed / not validated.** |
-| A-06 — independent Crypto review | #14 | **Preliminary static review exists but is stale.** The report predates the current PR #3 head and KDF API hardening. Its historical findings must be reconciled; it must not be represented as a fresh independent review of the current head. |
+| A-04 — adversarial negative tests | #12 | **Ported and source-refined — not executed / not validated.** Added `crates/ark-crypto/tests/adversarial_negative_tests.rs` using the current public API. It covers password/salt/config bounds, empty/short IKM, unregistered purposes, and error-format redaction. Purpose-label uniqueness is tested at the label layer, not by treating probabilistic output inequality as a universal invariant. Cargo execution is still required. |
+| A-05 — KDF fuzzing | #13 | **API-connected replacement implemented — not built or executed.** The new `fuzz_argon2id` and `fuzz_hkdf` targets call the actual public KDF APIs with bounded input. The original Ali targets remain on their historical branch; this replacement is stacked on the pending KDF branch and no fuzz run is claimed. |
+| A-06 — independent Crypto review | #14 | **Historical Ali report reconciled; fresh owner review still required.** `docs/reviews/A06_CURRENT_KDF_REVIEW.md` is a Systems Engineering cross-check of the hardened API, exact candidate revisions, CI evidence and residual risks. It is not Ali's independent approval. Saleh's response and Ali's review on the final Crypto head remain outstanding. |
 
 ## 3. A-05 replacement harness
 
@@ -44,17 +44,21 @@ This is a real API-connected harness, but no fuzz execution has been performed b
 - Saleh remains the Crypto implementation owner.
 - The replacement fuzz branch is dependent on the pending KDF boundary branch. It must not be merged independently into `main` before the Crypto dependency is accepted.
 - Do not merge the old `feat/security-testing-framework` or `feat/kdf-fuzzing-harness` wholesale.
-- No PR was opened, no review was submitted, no issue was changed, and no branch was merged as part of this reconciliation.
+- Two new review artifacts were added to this branch: `docs/reviews/A03_TRACEABILITY_MATRIX_RECONCILIATION.md` and `docs/reviews/A06_CURRENT_KDF_REVIEW.md`. The KAT and KDF integration test source omissions were restored. No PR was opened, no review was submitted, no issue state was changed, and no branch was merged.
 
-## 5. Remaining work
+## 5. Test-source recovery and validation boundary
+
+The hardened branch declared `#[cfg(test)] mod kat_tests;` but the module source was absent. The integration branch now contains `crates/ark-crypto/src/kdf/kat_tests.rs`, converted from the original RFC KAT test source so the test-only helper functions remain internal, plus `crates/ark-crypto/tests/kdf_tests.rs` rewritten to use only the public typed purpose API. These source files have not been compiled or run. The test suites compare registered purpose labels where label uniqueness is the property under test; they do not claim that cryptographic hash outputs can never collide.
+
+## 6. Remaining work
 
 1. Build the fuzz package with the pinned/nightly toolchain and resolve any compile or lint failures.
 2. Run bounded fuzz sessions for both targets; record exact commit, toolchain, cargo-fuzz version, commands, duration, corpus, and crash triage.
-3. Port and validate A-04 negative tests against the final public API.
-4. Locate and reconcile the actual A-03 traceability artifact.
-5. Refresh the A-06 review against the final PR #3 head and the accepted E-03 contract; preserve the distinction between static review and executed tooling.
-6. Obtain Ali's independent owner review and Crypto owner's response before acceptance.
+3. Validate the restored KAT and integration test modules plus A-04 negative tests against the final public API.
+4. Obtain Ali's review of the located A-03 matrix and its current-API reconciliation.
+5. Refresh A-06 on the final Crypto PR head and the final E-03 decisions; preserve the distinction between static review and executed tooling.
+6. Obtain Ali's independent owner review and Saleh's response before security acceptance.
 
-## 6. Limitations
+## 7. Limitations
 
 This report is based on GitHub source and metadata inspection. No local Cargo build, test, Clippy, benchmark, or fuzz command was run. It is not a cryptographic certification, and the new fuzz harness is not yet execution evidence.
