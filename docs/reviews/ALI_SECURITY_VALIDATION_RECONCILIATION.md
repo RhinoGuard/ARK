@@ -36,7 +36,7 @@ The branch adds:
 - `fuzz_hkdf`, which calls `HkdfContext::parse`, `HkdfIkm::from_slice`, and `derive_purpose_subkey`;
 - `fuzz/README.md` documenting commands, resource bounds, and evidence requirements.
 
-This is a real API-connected harness, but no fuzz execution has been performed by this change. Do not mark A-05 validated until the target builds and runs for a recorded duration with a recorded corpus and triaged result.
+This is a real API-connected harness. A bounded execution is now recorded in KDF fuzz smoke run #4; see Section 9. This is limited smoke evidence, not a sustained A-05 campaign.
 
 ## 4. Integration and ownership
 
@@ -52,20 +52,40 @@ The hardened branch declared `#[cfg(test)] mod kat_tests;` but the module source
 
 ## 6. Remaining work
 
-1. Build the fuzz package with the pinned/nightly toolchain and resolve any compile or lint failures.
-2. Run bounded fuzz sessions for both targets; record exact commit, toolchain, cargo-fuzz version, commands, duration, corpus, and crash triage.
-3. Validate the restored KAT and integration test modules plus A-04 negative tests against the final public API.
-4. Obtain Ali's review of the located A-03 matrix and its current-API reconciliation.
-5. Refresh A-06 on the final Crypto PR head and the final E-03 decisions; preserve the distinction between static review and executed tooling.
-6. Obtain Ali's independent owner review and Saleh's response before security acceptance.
+1. Run a longer owner-reviewed fuzz campaign on both targets, preserve corpus/crash triage, and consider cross-platform or resource-pressure scenarios beyond the 20-second smoke.
+2. Resolve the IKM provenance issue (CCB-01/06) with an explicit Crypto/Systems decision; the current wrapper does not prevent arbitrary long password bytes from being wrapped.
+3. Obtain Ali's review of the located A-03 matrix and its current-API reconciliation.
+4. Refresh A-06 on the final Crypto PR head and record Saleh's response to each finding.
+5. Run `cargo audit` against the exact final lockfile and review transitive dependencies.
+6. Obtain Ali's independent owner review and Crypto owner sign-off before security acceptance.
 
 ## 7. Limitations
 
-This report is based on GitHub source and metadata inspection. No local Cargo build, test, Clippy, benchmark, or fuzz command was run. It is not a cryptographic certification, and the new fuzz harness is not yet execution evidence.
+This report is based on GitHub source, metadata, and exact-head GitHub Actions evidence. No local Cargo command was run. The normal Rust workspace and the bounded 20-second fuzz smoke were executed by GitHub Actions; no sustained fuzz campaign, dependency audit, benchmark, or cryptographic certification is claimed.
 
 
 ## 8. Current execution evidence
 
 GitHub Actions [run #32](https://github.com/RhinoGuard/ARK/actions/runs/44621678450) passed on exact candidate head `27bc2e61a5e136aeb1febf147526fc2bc82b7d7c`. Ubuntu, Windows, macOS and MSRV Rust 1.85 completed format, workspace build, Clippy and tests successfully; commit-message validation also passed. The logged test suites included 10 Core tests, 6 KDF unit/KAT tests, 8 KDF integration tests and 8 adversarial negative tests, all passing.
 
-A-04 is therefore execution-validated for those cases on the stated candidate. A-05 remains **not execution-validated** because the ordinary Rust CI workflow does not enter the standalone fuzz workspace. The replacement fuzz targets must still be run separately. This passing CI does not replace Ali's independent owner review or Saleh's Crypto response.
+A-04 is execution-validated for the listed cases on the stated candidate. The separate fuzz smoke workflow is now recorded in Section 9; A-05 has a first bounded smoke result, but a sustained owner-reviewed campaign remains open. This passing CI does not replace Ali's independent owner review or Saleh's Crypto response.
+
+
+## 9. A-05 bounded fuzz smoke evidence
+
+The replacement harness was built and executed on the exact branch candidate in GitHub Actions [KDF fuzz smoke #4](https://github.com/RhinoGuard/ARK/actions/runs/44623186546):
+
+- Head: `4ec4de8d23201d7f2806b08cdccfb979b19fc0fc`
+- Toolchain: `rustc 1.102.0-nightly (65ce8611f 2026-11-18)`
+- `cargo-fuzz 0.13.2`
+- Both target formatting and compilation passed before execution.
+- Both targets completed with successful exits; no crash was reported.
+
+| Target | Runs / duration | libFuzzer counters | Peak RSS |
+|---|---:|---:|---:|
+| Argon2id | 590 / 21 seconds | coverage 338, features 346, final corpus 7 / 105 bytes | 329 MiB |
+| HKDF | 3,963,943 / 21 seconds | coverage 101, features 115, final corpus 25 / 1,916 bytes | 468 MiB |
+
+Commands used 20-second maximum run budgets, 1 GiB RSS limits, 10-second per-input timeouts, and max input lengths of 1,040 bytes (Argon2id) and 1,024 bytes (HKDF). The workflow uploaded artifact [`kdf-fuzz-smoke-49235ff289a11bfc49d19ebe0632eabf00dc3369`](https://github.com/RhinoGuard/ARK/actions/runs/44623186546/artifacts/14578157451), SHA-256 `8b3c01cf26d8e85c18107d0046dec2469833f1afb33f71bfa165e6aa54d285c3`.
+
+This closes only the first bounded smoke execution gap. It does not validate long-duration stability, multi-platform fuzzing, global resource control, or absence of latent vulnerabilities.
