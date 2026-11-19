@@ -22,13 +22,13 @@
 //! All assertions compare results using a secret-safe boolean check (`slices_equal_redacted`)
 //! that never prints raw password bytes, salts, PRKs, OKMs, or derived keys on failure.
 
+use super::argon2id::derive_argon2id_rfc9106_kat;
+use super::hkdf_sha256::{HKDF_SHA256_MAX_OUTPUT_LEN, hkdf_sha256_rfc5869_expand};
 use super::{
     Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfIkm, HkdfKeyPurpose, KEY_LEN,
     MAX_CONTEXT_LEN, MAX_ITERATIONS, MAX_LANES, MAX_MEMORY_KIB, MAX_PASSWORD_LEN, MAX_SALT_LEN,
     MIN_IKM_LEN, MIN_MEMORY_KIB, MIN_SALT_LEN, derive_kek, derive_purpose_subkey,
 };
-use super::argon2id::derive_argon2id_rfc9106_kat;
-use super::hkdf_sha256::{HKDF_SHA256_MAX_OUTPUT_LEN, hkdf_sha256_rfc5869_expand};
 
 /// Secret-safe slice comparison helper that returns a boolean without formatting
 /// or printing byte contents if a test assertion fails (`ARK-SEC-028`).
