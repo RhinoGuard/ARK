@@ -1,0 +1,142 @@
+# E-02 — PR #2 Integration and Merge-Readiness Audit
+
+**Audit date:** 2026-11-19  
+**Issue:** [#16 — E-02](https://github.com/RhinoGuard/ARK/issues/16)  
+**Reviewed PR:** [#2 — Rust Core foundation](https://github.com/RhinoGuard/ARK/pull/2)  
+**Audit mode:** GitHub metadata, source, history, review, CI, and ruleset inspection. No local Rust commands were executed as part of this audit.
+
+## 1. Disposition
+
+**Overall E-02 disposition: CHANGES REQUIRED for downstream Foundation integration.**
+
+PR #2 itself is already merged and its Core baseline is consistent with the accepted ADR-0005. This audit found no blocking defect in the merged `ark-core` implementation within the reviewed scope. The remaining blockers are in the dependent Crypto and Security Validation workstreams and in their integration history/API contracts; they must not be misreported as defects in PR #2.
+
+PR #2 must not be reopened or re-merged. Its merge is recorded below as historical evidence. The next-stage Foundation cannot be called integrated until the downstream blockers in Sections 4–7 are addressed.
+
+## 2. Exact revision and decision evidence
+
+| Item | Verified value |
+|---|---|
+| PR #2 final reviewed head | `03336335ae5f87dfc93f70ea56f5448265cb1749` |
+| PR #2 merge commit | `bafa677d6b42e7b04b736fcc386cd8e4ea4d9943` |
+| Current `main` at audit time | `68dad185bd5572f3abd557a61059415a932ca95d` |
+| PR #2 state | Closed / merged |
+| ADR-0005 | **Accepted** on current `main` |
+| E-01 owner record | `docs/decisions/ADR-0005-REVIEW.md` exists on current `main` |
+
+The ADR status in the current repository is authoritative. Older PR descriptions and stacked branches that still say ADR-0005 is Proposed or PR #2 is open are stale historical text and must be updated when those branches are ported.
+
+## 3. PR #2 implementation and verification
+
+The merged Core baseline provides the Rust workspace and `ark-core` domain vocabulary. The reviewed boundaries remain intact:
+
+- `ark-core` is dependency-free with respect to third-party crates and contains no cryptographic implementation, persistence, OS access, or authorization engine.
+- Typed identifiers are domain labels, not identity proof, capabilities, or permission grants.
+- `RuntimeMode` describes workflow, not authorization or isolation.
+- Version newtypes provide domain separation and numeric comparison only; they do not implement serialization, migration, or anti-rollback.
+- The shared `ArkError` taxonomy provides coarse fixed classifications; it does not prove that diagnostics in future subsystems are automatically sanitized.
+
+### CI evidence
+
+The final PR #2 head `03336335ae5f87dfc93f70ea56f5448265cb1749` has GitHub Actions run [`43006325892`](https://github.com/RhinoGuard/ARK/actions/runs/43006325892). All five jobs completed with conclusion **success**:
+
+| Job | Conclusion |
+|---|---|
+| Rust checks (Ubuntu) | success |
+| Rust checks (Windows) | success |
+| Rust checks (macOS) | success |
+| Minimum supported Rust version | success |
+| Validate commit messages | success |
+
+This is CI evidence for the recorded PR head. It is not evidence that this audit ran Cargo locally, and it is not a security audit of unimplemented subsystems.
+
+### Review evidence
+
+PR #2's recorded formal review is `COMMENTED`, not `APPROVED`. Owner confirmations were subsequently recorded in the PR discussion and E-01 issue record. The repository ruleset currently requires zero approving reviews, so this history is not equivalent to a configured GitHub approval gate.
+
+## 4. Repository policy and merge controls
+
+The active ruleset [ARK-Main-Protection](https://github.com/RhinoGuard/ARK/rules/27117937) applies to the default branch. Its effective rules are:
+
+- branch deletion prohibited;
+- non-fast-forward updates prohibited;
+- pull request required;
+- linear history required;
+- required approving review count: **0**;
+- Code Owner review: **not required**;
+- required status checks: **empty**;
+- bypass actors: none; current user bypass: never.
+
+The default branch endpoint reports protection enabled, while the classic branch-protection endpoint is disabled; the active repository ruleset is the relevant control source. No required-signatures rule is present in the retrieved ruleset. Consequently, PR workflow and linear history are enforced, but GitHub does not enforce an approval or CI-check gate through this ruleset. The repository's contributor/review policy is stricter than the configured minimum and should be honored manually until the ruleset is deliberately strengthened.
+
+**Policy finding — High (governance):** zero required approvals and zero required status checks allow a PR to satisfy GitHub's configured gate without an independent review or green CI requirement.  
+**Owner:** repository administrators / Systems Engineering.  
+**Disposition:** keep this as an explicit governance risk; do not silently change ruleset settings during E-02.
+
+## 5. Crypto dependency assessment — PR #3
+
+PR [#3](https://github.com/RhinoGuard/ARK/pull/3), owned by `ZeroTrace79`, is open at head:
+
+`d705efd042ca31113eab3b2bdf63fb643fd27f8b`
+
+The PR currently targets `main`, but the exact comparison against current `main` is **diverged: 4 commits ahead / 2 behind**, with merge base `bafa677d6b42e7b04b736fcc386cd8e4ea4d9943`. Its metadata reports `mergeable: true`; that flag does not make the compare graph up to date and must not replace an explicit synchronization/review step.
+
+The current PR head has five GitHub Actions jobs completed successfully (Ubuntu, Windows, macOS, MSRV, and commit-message validation). The prior formal review remains `CHANGES_REQUESTED`; it has not been dismissed or superseded by a new formal approval.
+
+### Findings requiring resolution before PR #3 can be accepted
+
+| Severity | Finding | Evidence / consequence | Owner | Required disposition |
+|---|---|---|---|---|
+| High | KAT-only helpers are exported through the public production KDF module | `derive_argon2id_rfc9106_kat` and `hkdf_sha256_rfc5869_expand` are re-exported from `crates/ark-crypto/src/kdf/mod.rs`. The Argon2 helper deliberately accepts RFC test-vector conditions outside the normal production salt/parameter policy; the HKDF helper deliberately accepts generic RFC IKM/info/output inputs. This expands production API surface and permits callers to bypass the intended production entry points. | Crypto | Move conformance-only helpers behind test-only/internal support and keep published KATs executable without exporting test escape hatches in production builds. |
+| High | Raw IKM remains accepted by the general HKDF derivation entry point | `derive_subkey(input_key_material: &[u8], ...)` performs a length check by constructing `HkdfIkm`, but the public function still accepts arbitrary caller bytes. A 16-byte minimum does not establish entropy or provenance; a human password of sufficient length can still be passed. | Crypto + Systems Engineering | Make the accepted IKM boundary explicit in E-03 and align the public API with the approved typed contract. Do not claim the wrapper proves entropy. |
+| Medium | Context parsing is broader than the closed purpose enum suggests | `HkdfContext::parse` checks the `ARK/v1/` prefix and printable suffix, so arbitrary purpose strings are accepted by `derive_subkey`. This conflicts with documentation that describes the purpose set as closed and with the typed `HkdfKeyPurpose` path. | Crypto | Choose and document one policy: closed enum-only purposes, or an explicitly extensible namespace with collision/ownership rules. Add negative tests for the selected grammar. |
+| Medium | Argon2 parameter calibration is not yet demonstrated across supported targets | PR #3 describes local benchmark execution on one Windows 10 / Intel i3-10100F / 16 GiB system. The current evidence does not establish performance acceptability across all supported platforms or low-resource configurations. | Crypto + Systems Engineering | Treat current defaults as provisional until a reproducible calibration matrix and target resource budget are documented. |
+| High | Branch synchronization and formal review remain incomplete | Compare reports 2 commits behind/diverged; the prior formal review is still `CHANGES_REQUESTED`. | Crypto | Synchronize against current `main`, answer each review item, obtain independent review, and rerun CI on the final head. |
+
+These findings concern the proposed Crypto integration, not the already-merged Core code. KDF-only scope must also remain explicit: AEAD, key wrapping, nonce lifecycle, key hierarchy orchestration, storage, and recovery are not delivered by PR #3.
+
+## 6. Security Validation and fuzzing integration
+
+The Security Validation owner is `alieliteworks-debug`. Relevant branches were compared against current `main`:
+
+| Branch | Compare result against current `main` | Integration assessment |
+|---|---:|---|
+| `feat/security-testing-framework` | 13 ahead / 3 behind; diverged | Do not merge wholesale. It includes the original Foundation/workspace history as well as Security Validation changes. Port only owner-specific files/commits onto a fresh branch based on current `main`. |
+| `feat/kdf-fuzzing-harness` | 14 ahead / 3 behind; diverged | Do not merge wholesale. Port the fuzz package/targets only after adapting them to the current `ark-crypto` API and current workspace. |
+| `docs/kdf-threat-model` | 3 ahead / 3 behind; diverged | Rebase/port the document onto current `main`; reconcile claims with the current KDF code and review findings. |
+| `docs/security-traceability-matrix` | 3 ahead / 3 behind; diverged | Rebase/port the matrix and map claims to actual code/tests rather than planned controls. |
+| `docs/crypto-security-review` | 3 ahead / 3 behind; diverged | Update the review against the current PR #3 head; the existing report predates the current PR changes. |
+| `test/adversarial-negative-tests` | 4 ahead / 3 behind; diverged | Do not merge as-is: its diff introduces a separate root package layout and removes the root README; port/adapt only relevant tests into the current `crates/ark-crypto` layout. |
+
+### Fuzzing finding — High
+
+The current `feat/kdf-fuzzing-harness` target code explicitly documents that the KDF targets do **not** call `derive_kek` or `derive_subkey`. The Argon2 target locally simulates parameter/password/salt bounds; the HKDF target locally simulates non-empty IKM/context checks. Its `fuzz/Cargo.toml` depends on `ark-core`, not `ark-crypto`.
+
+Therefore A-05 must not be described as fuzzing the actual cryptographic API. It is currently validation scaffolding only.  
+**Owner:** Security Validation (`alieliteworks-debug`), with Crypto API coordination from `ZeroTrace79`.  
+**Required disposition:** add `ark-crypto` as a fuzz-package dependency on the synchronized workspace, invoke the real public KDF entry points with tightly bounded inputs/configuration, and retain negative/error-path assertions. Record actual fuzz duration, corpus, command, and run result; do not claim fuzzing occurred until it does.
+
+The Core-specific fuzz targets on `feat/security-testing-framework` do call `ark-core` constructors and formatting/accessor methods. They are distinct from KDF fuzzing and should be assessed on their own merits.
+
+## 7. E-04 stacked PR and trust-boundary document
+
+PR [#20](https://github.com/RhinoGuard/ARK/pull/20) currently targets `feat/rust-core-foundation` at `03336335ae5f87dfc93f70ea56f5448265cb1749`, not current `main`. Its document and PR body still say ADR-0005 is Proposed and PR #2 is open/unmerged. Both statements are stale: ADR-0005 is Accepted and PR #2 is merged.
+
+**Severity: Medium (documentation/integration).**  
+**Owner:** Systems Engineering.  
+**Required disposition:** retarget PR #20 to current `main`, correct its status/baseline text, then review the system-level trust-boundary content against the accepted ADR, current PR #3 KDF behavior, and explicit implemented/proposed/unknown labels. Do not merge the stale version.
+
+## 8. Required next actions
+
+1. **Crypto / `ZeroTrace79`:** resolve the KAT export, IKM provenance/API, HKDF purpose grammar, benchmark-evidence, and synchronization/review findings in PR #3.
+2. **Security Validation / `alieliteworks-debug`:** rebuild the relevant test/fuzz branches on current `main`; ensure A-05 fuzzes actual `ark-crypto` APIs; port A-02/A-03/A-04/A-06 artifacts without importing the old Foundation history.
+3. **Systems Engineering:** complete E-03 before locking the Core-to-Crypto public boundary; retarget and update PR #20 for E-04; retain the ruleset gap as a governance finding for a separate decision.
+4. **Integration:** require independent owner review and fresh CI on each final PR head. No branch should be merged solely because the GitHub metadata says `mergeable: true`.
+
+## 9. Scope and limitations
+
+- This report is based on the exact refs and GitHub evidence listed above as retrieved on 2026-11-19.
+- No local `cargo test`, `cargo clippy`, `cargo fmt`, benchmark, or fuzzing command was run for this audit.
+- The successful PR #2 CI run verifies the recorded Rust workflow jobs; it does not prove every security invariant is implemented.
+- Static inspection and branch comparison do not constitute a cryptographic audit, formal verification, or production-readiness certification.
+- No repository ruleset, branch, existing review, or merge state was modified as part of this audit artifact.
