@@ -19,6 +19,8 @@ This documentation is the shared engineering baseline for human contributors and
 - development/TEAM_WORKFLOW.md — ownership and review workflow.
 - development/COMMIT_CONVENTIONS.md — commit header and retained-history rules.
 
+- architecture/CORE_CRYPTO_INTEGRATION_CONTRACT.md — Core/Crypto ownership, dependency, data, error, and lifecycle boundary.
+
 ## Subsystem specifications
 
 - cryptography/CRYPTOGRAPHY.md — cryptographic goals, key hierarchy, chunk requirements, and open design gates.
