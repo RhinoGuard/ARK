@@ -34,6 +34,12 @@ jobs:
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz --locked
 
+      - name: Record Rust and cargo-fuzz versions
+        run: |
+          rustc +nightly --version
+          cargo +nightly --version
+          cargo-fuzz --version
+
       - name: Check fuzz package formatting
         run: cargo fmt --manifest-path fuzz/Cargo.toml --all -- --check
 
