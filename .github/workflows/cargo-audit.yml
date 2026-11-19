@@ -1,0 +1,51 @@
+name: Cargo dependency audit
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/cargo-audit.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/**/Cargo.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cargo-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit-lockfile:
+    name: Audit locked Rust dependency graph
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - name: Install cargo-audit
+        run: cargo +stable install cargo-audit --locked
+
+      - name: Record toolchain versions
+        run: |
+          rustc +stable --version
+          cargo +stable --version
+          cargo-audit --version
+
+      - name: Audit Cargo.lock
+        run: |
+          set -o pipefail
+          cargo +stable audit --locked 2>&1 | tee cargo-audit-report.txt
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-audit-${{ github.sha }}
+          path: cargo-audit-report.txt
+          if-no-files-found: ignore
