@@ -399,9 +399,9 @@ This addendum updates the baseline snapshot and selected exit-gate evidence. It 
 
 ### Exact staged validation evidence
 
-- [ARK CI #42](https://github.com/RhinoGuard/ARK/actions/runs/44624226086) passed all five jobs on Rust source head `be376f62ee454ca359f79c278f69fe3d882e3231`, including Ubuntu, Windows, macOS, Rust 1.85 MSRV, formatting, build, Clippy, tests, and commit-message validation.
-- [KDF fuzz smoke #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096) passed on the same code head. It used nightly Rust `1.102.0-nightly`, Cargo `1.102.0-nightly`, and cargo-fuzz `0.13.2`; bounded runs completed with 754 Argon2id executions and 4,633,173 HKDF executions over 21 seconds per target with no reported crash.
-- The exact staged branch subsequently received documentation-only evidence updates. Its Rust KDF/test source did not change after the successful code CI/fuzz head. The latest branch-specific workflow status is maintained in PR #26; a successful staged check does not make the branch part of `main`.
+- [ARK CI #46](https://github.com/RhinoGuard/ARK/actions/runs/44624894201) passed all five jobs on the latest PR #26 head `076c84082a6259b9c1c724327bdc32ba614581b8`, including Ubuntu, Windows, macOS, Rust 1.85 MSRV, formatting, build, Clippy, tests, and commit-message validation.
+- [KDF fuzz smoke #10](https://github.com/RhinoGuard/ARK/actions/runs/44624894126) passed on the same latest head. It used nightly Rust/Cargo `1.102.0-nightly` and cargo-fuzz `0.13.2`; bounded runs completed with 428 Argon2id executions and 2,718,772 HKDF executions over 21 seconds per target with no reported crash. Artifact SHA-256: `2d80c6fa8c221d41b1705dffd5bcbc032a604d7127fc8ef0e3d80ac910dff210`.
+- These checks validate the staged branch only; a successful staged check does not make it part of `main` or replace the unresolved PR #3 owner review.
 
 ### Foundation exit remains blocked
 
