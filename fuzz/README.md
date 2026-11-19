@@ -28,12 +28,12 @@ The Argon2id target uses the current minimum production memory cost (16 MiB) and
 
 ## Evidence discipline
 
-The workflow has been added but its first run has not yet been observed. Do not report A-05 as validated until that workflow actually passes and its run ID/head are recorded. Before security acceptance, also perform a longer owner-reviewed fuzz session and record exact commit SHA, Rust/nightly version, cargo-fuzz version, command, duration, corpus, coverage, crash count, and triage outcome. Convert every discovered crash into a minimized regression test before acceptance.
+The dedicated workflow has executed successfully on the latest PR #26 head. The latest run and exact toolchain/corpus evidence are recorded below. This establishes only bounded smoke execution; before security acceptance, perform a longer owner-reviewed fuzz session and record exact commit SHA, Rust/nightly version, cargo-fuzz version, command, duration, corpus, coverage, crash count, and triage outcome. Convert every discovered crash into a minimized regression test before acceptance.
 
 
 ## Recorded smoke evidence
 
-Two clean bounded smoke runs are now recorded. The latest and canonical repeat is [KDF fuzz smoke #7](https://github.com/RhinoGuard/ARK/actions/runs/44624226096) on candidate head `be376f62ee454ca359f79c278f69fe3d882e3231`; the first successful run was [#4](https://github.com/RhinoGuard/ARK/actions/runs/44623186546).
+Three clean bounded smoke runs are now recorded. The latest and canonical repeat is [KDF fuzz smoke #10](https://github.com/RhinoGuard/ARK/actions/runs/44624894126) on current candidate head `076c84082a6259b9c1c724327bdc32ba614581b8`; earlier successful runs #4 and #7 are retained as repeat samples.
 
 - Environment: GitHub-hosted Ubuntu runner.
 - Toolchain: `rustc 1.102.0-nightly (65ce8611f 2026-11-18)`; `cargo 1.102.0-nightly (f93c676e3 2026-11-15)`; `cargo-fuzz 0.13.2`.
@@ -46,6 +46,6 @@ Two clean bounded smoke runs are now recorded. The latest and canonical repeat i
 
 Commands used `-max_total_time=20`, `-rss_limit_mb=1024`, a 10-second per-input timeout, and target-specific maximum input lengths (1,040 bytes for Argon2id; 1,024 bytes for HKDF). The observed wall-time is 21 seconds per target due to libFuzzer's stop/report boundary.
 
-The uploaded artifact is [`kdf-fuzz-smoke-32b7a8302db9098a28fa637685da1aef874b2597`](https://github.com/RhinoGuard/ARK/actions/runs/44624226096/artifacts/14577108336), SHA-256 `de2ba58bd23b5b8d5cf7707d96b4a87b7ddf10a064149a478de0d8b3ed62f78a`.
+The uploaded artifact is [`kdf-fuzz-smoke-d8fe9afbb3f9d2299cafde0cbb390f5c0b4f4188`](https://github.com/RhinoGuard/ARK/actions/runs/44624894126/artifacts/14579133051), SHA-256 `2d80c6fa8c221d41b1705dffd5bcbc032a604d7127fc8ef0e3d80ac910dff210`.
 
-These are two 20-second smoke samples, not a sustained campaign, cross-platform fuzz results, cryptographic proof, or assurance that no latent crash exists. Retain the original run logs and artifact as the reproducibility record.
+These are three 20-second smoke samples, not a sustained campaign, cross-platform fuzz results, cryptographic proof, or assurance that no latent crash exists. Retain the original run logs and artifact as the reproducibility record.
