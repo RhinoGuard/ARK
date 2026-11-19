@@ -10,7 +10,7 @@ use ark_crypto::kdf::{
 };
 
 const SENTINEL_PASSWORD: &[u8] = b"CONFIDENTIAL_ARK_ROOT_PASSPHRASE_SENTINEL_#9999";
-const SENTINEL_SALT: &[u8] = b"UNTRUSTED_ATTACKER_CONTROLLED_SALT_123456";
+const SENTINEL_SALT: &[u8] = b"SECRET_SALT_123";
 const SENTINEL_IKM: &[u8] = b"SECRET_IKM";
 
 #[test]
@@ -98,9 +98,9 @@ fn argon2_revalidates_publicly_constructible_cost_parameters() {
 
 #[test]
 fn argon2_error_formatting_does_not_disclose_password_or_salt() {
-    let oversized = vec![0x41_u8; MAX_PASSWORD_LEN + 1];
-    let result = derive_kek(&oversized, SENTINEL_SALT, Argon2idConfig::default());
-    assert!(result.is_err(), "oversized password unexpectedly derived a key");
+    // Pass both sentinels into the API and force an early validation error.
+    let result = derive_kek(SENTINEL_PASSWORD, SENTINEL_SALT, Argon2idConfig::default());
+    assert!(result.is_err(), "short salt unexpectedly derived a key");
     let Err(error) = result else {
         return;
     };
