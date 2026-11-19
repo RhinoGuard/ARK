@@ -26,8 +26,7 @@ use super::{
     Argon2Error, Argon2idConfig, HKDF_SHA256_MAX_OUTPUT_LEN, HkdfContext, HkdfError, HkdfIkm,
     HkdfKeyPurpose, KEY_LEN, MAX_CONTEXT_LEN, MAX_ITERATIONS, MAX_LANES, MAX_MEMORY_KIB,
     MAX_PASSWORD_LEN, MAX_SALT_LEN, MIN_IKM_LEN, MIN_MEMORY_KIB, MIN_SALT_LEN,
-    derive_argon2id_rfc9106_kat, derive_kek, derive_purpose_subkey,
-    hkdf_sha256_rfc5869_expand,
+    derive_argon2id_rfc9106_kat, derive_kek, derive_purpose_subkey, hkdf_sha256_rfc5869_expand,
 };
 
 /// Secret-safe slice comparison helper that returns a boolean without formatting
