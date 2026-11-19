@@ -22,8 +22,8 @@
 | A-01 — Core API test reconciliation | #9 | **Closed historically; current acceptance not revalidated here.** The old branch is diverged and contains duplicated Foundation history. Port only Ali-owned test changes and verify against current Core API if further changes are required. |
 | A-02 — KDF threat model | #10 | **Implemented — needs synchronization.** Existing threat model is useful but contains stale descriptions of raw `derive_subkey`, unbounded Argon2 configuration, and open-ended context. An API reconciliation addendum has been added in this branch; owner review remains outstanding. |
 | A-03 — invariant traceability | #11 | **Not revalidated.** The branch name exists, but the expected traceability file was not located at the initially guessed path. Do not infer acceptance from issue closure. Locate the exact artifact and verify every mapping against current code/tests before claiming current validity. |
-| A-04 — adversarial negative tests | #12 | **Ported and source-refined — not executed / not validated.** Added `crates/ark-crypto/tests/adversarial_negative_tests.rs` using the current public API. It covers password/salt/config bounds, empty/short IKM, unregistered purposes, and error-format redaction. Purpose-label uniqueness is tested at the label layer, not by treating probabilistic output inequality as a universal invariant. Cargo execution is still required. |
-| A-05 — KDF fuzzing | #13 | **API-connected replacement implemented — not built or executed.** The new `fuzz_argon2id` and `fuzz_hkdf` targets call the actual public KDF APIs with bounded input. The original Ali targets remain on their historical branch; this replacement is stacked on the pending KDF branch and no fuzz run is claimed. |
+| A-04 — adversarial negative tests | #12 | **Executed successfully on the current candidate.** The 8 negative tests cover password/salt/config bounds (including direct public-field config construction), empty/short IKM, unregistered purposes, purpose-label uniqueness and error-format redaction. All 8 pass in CI #32 on Ubuntu, Windows, macOS and Rust 1.85. This validates only the exercised inputs and does not prove IKM provenance or universal diagnostic safety. |
+| A-05 — KDF fuzzing | #13 | **API-connected replacement implemented; actual fuzz execution still pending.** The two targets call the actual public KDF APIs with bounded input. CI #32 does not build or execute the separate `fuzz/` workspace. A dedicated cargo-fuzz smoke run and recorded corpus/crash evidence are still required. |
 | A-06 — independent Crypto review | #14 | **Historical Ali report reconciled; fresh owner review still required.** `docs/reviews/A06_CURRENT_KDF_REVIEW.md` is a Systems Engineering cross-check of the hardened API, exact candidate revisions, CI evidence and residual risks. It is not Ali's independent approval. Saleh's response and Ali's review on the final Crypto head remain outstanding. |
 
 ## 3. A-05 replacement harness
@@ -62,3 +62,10 @@ The hardened branch declared `#[cfg(test)] mod kat_tests;` but the module source
 ## 7. Limitations
 
 This report is based on GitHub source and metadata inspection. No local Cargo build, test, Clippy, benchmark, or fuzz command was run. It is not a cryptographic certification, and the new fuzz harness is not yet execution evidence.
+
+
+## 8. Current execution evidence
+
+GitHub Actions [run #32](https://github.com/RhinoGuard/ARK/actions/runs/44621678450) passed on exact candidate head `27bc2e61a5e136aeb1febf147526fc2bc82b7d7c`. Ubuntu, Windows, macOS and MSRV Rust 1.85 completed format, workspace build, Clippy and tests successfully; commit-message validation also passed. The logged test suites included 10 Core tests, 6 KDF unit/KAT tests, 8 KDF integration tests and 8 adversarial negative tests, all passing.
+
+A-04 is therefore execution-validated for those cases on the stated candidate. A-05 remains **not execution-validated** because the ordinary Rust CI workflow does not enter the standalone fuzz workspace. The replacement fuzz targets must still be run separately. This passing CI does not replace Ali's independent owner review or Saleh's Crypto response.
