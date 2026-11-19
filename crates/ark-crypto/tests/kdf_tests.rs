@@ -2,8 +2,9 @@
 
 use ark_crypto::kdf::{
     Argon2Error, Argon2Salt, Argon2idConfig, DEFAULT_ITERATIONS, DEFAULT_LANES, DEFAULT_MEMORY_KIB,
-    HkdfError, MAX_ITERATIONS, MAX_LANES, MAX_MEMORY_KIB, MAX_PASSWORD_LEN, MAX_SALT_LEN,
-    MIN_MEMORY_KIB, MIN_SALT_LEN, derive_kek, derive_kek_with_salt, derive_subkey,
+    HkdfContext, HkdfError, HkdfIkm, HkdfKeyPurpose, MAX_CONTEXT_LEN, MAX_ITERATIONS, MAX_LANES,
+    MAX_MEMORY_KIB, MAX_PASSWORD_LEN, MAX_SALT_LEN, MIN_IKM_LEN, MIN_MEMORY_KIB, MIN_SALT_LEN,
+    derive_kek, derive_kek_with_salt, derive_purpose_subkey, derive_subkey,
 };
 
 #[test]
@@ -131,15 +132,68 @@ fn hkdf_is_deterministic_for_same_inputs() -> Result<(), HkdfError> {
 }
 
 #[test]
-fn hkdf_separates_distinct_contexts() -> Result<(), HkdfError> {
+fn hkdf_separates_distinct_contexts_and_purposes() -> Result<(), HkdfError> {
     let project = derive_subkey(b"workspace-master-key", None, b"ARK/v1/project-key")?;
     let file = derive_subkey(b"workspace-master-key", None, b"ARK/v1/file-key")?;
     assert_ne!(&*project, &*file);
+
+    let key_bytes = [0x3C_u8; 32];
+    let ikm = HkdfIkm::from_key_array(&key_bytes);
+    let purposes = [
+        HkdfKeyPurpose::WorkspaceKey,
+        HkdfKeyPurpose::ProjectKey,
+        HkdfKeyPurpose::FileKey,
+        HkdfKeyPurpose::MetadataKey,
+        HkdfKeyPurpose::AuditKey,
+        HkdfKeyPurpose::RecoveryKey,
+    ];
+    for (i, &p1) in purposes.iter().enumerate() {
+        for &p2 in &purposes[i + 1..] {
+            let k1 = derive_purpose_subkey(ikm, None, p1)?;
+            let k2 = derive_purpose_subkey(ikm, None, p2)?;
+            assert_ne!(&*k1, &*k2);
+        }
+    }
     Ok(())
 }
 
 #[test]
-fn hkdf_rejects_empty_context() {
-    let result = derive_subkey(b"some-key-material", None, b"");
-    assert_eq!(result, Err(HkdfError::EmptyContext));
+fn hkdf_enforces_ikm_and_context_domain_separation_contract() {
+    assert_eq!(
+        derive_subkey(b"", None, b"ARK/v1/project-key"),
+        Err(HkdfError::EmptyInputKeyMaterial)
+    );
+
+    let short_ikm = [0x11_u8; MIN_IKM_LEN - 1];
+    assert_eq!(
+        derive_subkey(&short_ikm, None, b"ARK/v1/project-key"),
+        Err(HkdfError::InputKeyMaterialTooShort)
+    );
+
+    assert_eq!(
+        derive_subkey(b"some-key-material", None, b""),
+        Err(HkdfError::EmptyContext)
+    );
+
+    let oversized_ctx = [b'a'; MAX_CONTEXT_LEN + 1];
+    assert_eq!(
+        derive_subkey(b"some-key-material", None, &oversized_ctx),
+        Err(HkdfError::ContextTooLong)
+    );
+
+    // Missing ARK/v1/ namespace prefix
+    assert_eq!(
+        derive_subkey(b"some-key-material", None, b"project-key"),
+        Err(HkdfError::InvalidContextFormat)
+    );
+    // Empty suffix after ARK/v1/
+    assert_eq!(
+        derive_subkey(b"some-key-material", None, b"ARK/v1/"),
+        Err(HkdfError::InvalidContextFormat)
+    );
+    // Whitespace inside suffix
+    assert_eq!(
+        HkdfContext::parse(b"ARK/v1/project key"),
+        Err(HkdfError::InvalidContextFormat)
+    );
 }
