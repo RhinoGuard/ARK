@@ -5,7 +5,7 @@
 //! vulnerabilities outside the exercised inputs.
 
 use ark_crypto::kdf::{
-    Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfKeyPurpose, MAX_PASSWORD_LEN,
+    Argon2Error, Argon2idConfig, HkdfContext, HkdfError, HkdfIkm, HkdfKeyPurpose, MAX_PASSWORD_LEN,
     MIN_IKM_LEN, MIN_MEMORY_KIB, derive_kek,
 };
 
