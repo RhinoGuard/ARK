@@ -2,8 +2,8 @@
 
 **Status:** PROPOSED — requires Crypto, Systems Engineering, and Security Validation owner review.  
 **Issue:** [#17 — E-03](https://github.com/RhinoGuard/ARK/issues/17)  
-**Baseline:** Accepted ADR-0005, merged PR #2, and the current KDF implementation proposed in PR #3.  
-**Last checked:** 2026-11-19.
+**Baseline:** Accepted ADR-0005 and merged PR #2; current KDF source is tracked through PR #3 and the stacked Security Validation candidate PR #26. PR #3 and PR #26 remain unmerged.  
+**Last checked:** 2026-11-20.
 
 > This is a subsystem boundary contract, not an implementation claim. PR #2 is merged. PR #3 remains open and has unresolved review/API findings. The contract does not make AEAD, key wrapping, key hierarchy, storage, or recovery available.
 
@@ -160,3 +160,44 @@ This contract does not implement or approve:
 - a generic crypto-provider trait in `ark-core`.
 
 Those require owner-specific ADRs and independent review before implementation.
+
+
+## 12. Current implementation reconciliation (2026-11-20)
+
+This section records a source-and-CI snapshot; it does not convert proposed directions into owner-approved design decisions. The reviewed candidate is PR #26 head `27bc2e61a5e136aeb1febf147526fc2bc82b7d7c`, stacked on `fix/crypto-kdf-production-api-boundary` at `552041395ee9097902eb6a7d1c934ed55b57a99f`. The candidate is not merged to `main`; PR #3 also remains open at its older head.
+
+### 12.1 CCB decision status against the current candidate
+
+| Decision | Current source evidence | Current disposition |
+|---|---|---|
+| CCB-01 — IKM acceptance and provenance | Public production derivation is `derive_purpose_subkey(HkdfIkm, salt, HkdfKeyPurpose)`; raw `derive_subkey` is private. However, `HkdfIkm::from_slice` accepts arbitrary bytes of 16 bytes or longer, and `from_key_array` accepts any caller-provided 32-byte array. Neither constructor proves a source or entropy provenance. | **Partially mitigated; owner decision open.** The raw internal derivation route is closed, but the API does not technically prevent a caller from wrapping raw password bytes of sufficient length. A producer/source-typed key-material design or explicit call-site provenance contract remains necessary. |
+| CCB-02 — HKDF purpose namespace | `HkdfKeyPurpose` defines six canonical `ARK/v1/<purpose>` values; `HkdfContext::parse` rejects unregistered and malformed values; production derivation takes the enum. | **Enforced in the current API candidate.** Whether the six-purpose set is the accepted long-term namespace and who may extend it still requires Crypto/Systems/Security Validation review. |
+| CCB-03 — CSPRNG and salt/key generation ownership | `Argon2Salt::from_slice` validates caller-provided bytes; it does not generate them. No CSPRNG provider or random-key generation API is supplied by the KDF crate. | **Open / not implemented.** Platform owner, entropy availability behavior, salt uniqueness domain and random key generation contract remain undecided. |
+| CCB-04 — Windows/Linux/macOS parameter profiles | Production defaults are 64 MiB, 3 iterations, 1 lane; hard bounds are 16–256 MiB, 1–10 iterations and 1–8 lanes. CI confirms functional tests on Ubuntu, Windows, macOS and Rust 1.85, not latency or memory-performance calibration. | **Bounds implemented; calibration open.** CI success is not a performance benchmark or supported-device profile approval. |
+| CCB-05 — Crypto-to-Core error mapping | `Argon2Error` and `HkdfError` remain Crypto-specific sanitized types. The Core mapping table in Section 6 remains a proposal; no approved service-level conversion contract is included in the current KDF primitive. | **Proposed only; owner decision open.** The service boundary and uniform external behavior for future wrapper authentication failures must be approved before integration. |
+| CCB-06 — Approved IKM source classes | Current `HkdfIkm` is a borrowed byte-slice wrapper with a minimum-length check; it has no source enum or producer-restricted constructor. | **Open / not implemented.** Password-derived KEK, random Workspace/Package/Recovery keys and any further derived key sources need explicit owner policy and call-site design. |
+| CCB-07 — Persisted KDF metadata and migration | The current deliverable is KDF primitives. No authenticated key-wrapper, persisted KDF metadata record, migration parser or compatibility negotiation is implemented by this candidate. | **Deferred / not implemented.** Requires a format ADR and owning Storage/Package/Recovery decisions. |
+| CCB-08 — KAT helper isolation | RFC 9106/RFC 5869 helpers are compiled only under `cfg(test)`, are imported inside the private KDF test module, and are absent from the normal production re-export surface. | **Implemented and CI-validated for this candidate.** Official KAT and KDF test targets passed the exact-head CI run below. |
+
+### 12.2 Exact validation evidence
+
+GitHub Actions [ARK CI run #32](https://github.com/RhinoGuard/ARK/actions/runs/44621678450) completed with conclusion **success** on candidate head `27bc2e61a5e136aeb1febf147526fc2bc82b7d7c`. All five jobs passed: Ubuntu, Windows, macOS, minimum supported Rust 1.85, and Conventional Commit validation. The Rust jobs completed formatting, workspace build, Clippy and tests.
+
+The executed test output included 10 Core tests, 6 KDF unit/KAT tests, 8 KDF integration tests, and 8 adversarial negative tests, all passing. This validates only the code paths exercised by those tests. It does not validate the standalone fuzz workspace, dependency advisories, performance calibration, IKM provenance, CSPRNG generation, or future storage/recovery formats.
+
+### 12.3 Contract implications and remaining acceptance gates
+
+1. **Do not state that the current API prevents raw passwords from reaching HKDF.** The normative rule in Section 2 remains mandatory, but the current `HkdfIkm` constructors cannot enforce provenance. This is a real residual API-policy gap for CCB-01/06 and must be resolved with Crypto owner input before downstream services rely on it.
+2. The six-purpose API and test-only KAT boundary are now implemented in the staged candidate, but PR #26 is stacked on an unmerged Crypto branch. The exact accepted Crypto base and final source SHA must be settled before the candidate can be treated as the repository's integrated contract.
+3. No Core dependency on `ark-crypto` is introduced. The current boundary remains one-way and Core stays crypto-agnostic.
+4. A-05 fuzz targets call the actual public KDF APIs, but no fuzz run has been performed as part of CI #32. Fuzz execution and crash triage remain outstanding.
+5. Issue #17 and PR #23 remain open; this reconciliation is evidence for owner review, not a closure or approval record.
+
+### 12.4 Decisions still requiring explicit owners
+
+- Crypto owner (`ZeroTrace79`): CCB-01/02/06 API/provenance semantics, CCB-03 random-material generation contract, CCB-04 supported profiles and CCB-05 sanitized failure mapping.
+- Systems Engineering: service boundary/error mapping placement, resource budgets and compatibility requirements.
+- Security Validation (`alieliteworks-debug`): independent review of the current test/KAT/fuzz surface and residual password-to-IKM misuse risk.
+- Platform and future Storage/Package/Recovery owners: CCB-03 entropy provider ownership and CCB-07 authenticated metadata/migration design.
+
+Until these decisions are reviewed, this document remains **PROPOSED** even though parts of the KDF API and its tests have advanced.
