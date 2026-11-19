@@ -213,7 +213,10 @@ fn hkdf_parser_accepts_exactly_all_registered_contexts() {
     for purpose in purposes {
         let canonical = purpose.as_context_bytes();
         let parsed_result = HkdfContext::parse(canonical);
-        assert!(parsed_result.is_ok(), "registered HKDF purpose was rejected");
+        assert!(
+            parsed_result.is_ok(),
+            "registered HKDF purpose was rejected"
+        );
         let Ok(parsed) = parsed_result else {
             return;
         };
