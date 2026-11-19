@@ -72,7 +72,7 @@ This independent review evaluates the key-derivation foundation delivered in PR 
   }
   ```
 - **Attack Preconditions & Impact:** Any slice with length `>= 1` byte is accepted. If a downstream caller inadvertently passes a raw user passphrase or a 4-byte token directly to HKDF rather than to Argon2id, HKDF will derive subkeys without error, but with severely degraded entropy.
-- **Remediation Note:** Length enforcement alone does not guarantee entropy or key quality. However, an explicit minimum length constraint (e.g., `>= 16` or `32` bytes) or a strongly typed key newtype at the Core-to-Crypto boundary prevents accidental call-site confusion (`[E-03]`, `[S-04]`).
+- **Remediation Note:** Input length alone does not establish entropy or key quality: a long, low-entropy value (including a raw user password) may still be unsuitable as HKDF input. The primary mitigation should be a strongly typed IKM contract at the Core-to-Crypto boundary that accepts only key material produced by approved key-generation or derivation flows and prevents raw passwords from being passed directly to HKDF (`[E-03]`, `[S-04]`). A minimum-length check may be retained as a supplementary input constraint, but it must not be treated as proof of entropy or as a substitute for the typed contract.
 
 ---
 
