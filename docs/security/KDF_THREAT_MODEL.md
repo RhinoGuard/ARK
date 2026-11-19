@@ -179,7 +179,7 @@ This addendum supersedes the implementation descriptions above wherever they con
 
 ### 4.3 Verification status
 
-The API reconciliation above is based on source inspection and exact-head CI evidence. The candidate's Rust tests and Clippy passed CI #32/#42; the separate API-connected fuzz harness completed two bounded smoke runs, most recently KDF fuzz smoke #7 on head `be376f62ee454ca359f79c278f69fe3d882e3231`. This is not a sustained fuzz campaign or a cross-platform campaign.
+The API reconciliation above is based on source inspection and exact-head CI evidence. The candidate's Rust tests and Clippy passed latest exact-head CI #46 on `076c84082a6259b9c1c724327bdc32ba614581b8`. The separate API-connected fuzz harness completed three bounded smoke runs, most recently KDF fuzz smoke #10 on that same head: 428 Argon2id executions and 2,718,772 HKDF executions in 21 seconds per target, without a reported crash. Toolchain: rustc/cargo `1.102.0-nightly`, cargo-fuzz `0.13.2`. Artifact SHA-256 `2d80c6fa8c221d41b1705dffd5bcbc032a604d7127fc8ef0e3d80ac910dff210`. This is not a sustained fuzz campaign or cross-platform campaign.
 
 ### 4.4 Required follow-up
 
