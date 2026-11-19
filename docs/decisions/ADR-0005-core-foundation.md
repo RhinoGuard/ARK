@@ -1,10 +1,11 @@
 # ADR-0005: Initial Rust Workspace and Core Domain Foundation
 
-- **Status:** Proposed for team review
+- **Status:** Accepted
 - **Date:** 2026-11-11
+- **Decision date:** 2026-11-19
 - **Decision scope:** Cargo workspace baseline and the first platform-independent domain crate
-- **Decision owners:** Systems Engineering; cross-team review required
-- **Implementation status:** Implemented on the feat/rust-core-foundation branch; not yet merged
+- **Decision owners:** Systems Engineering; cross-team review completed
+- **Implementation status:** Implemented and merged to `main` via PR #2 (merge commit `bafa677d6b42e7b04b736fcc386cd8e4ea4d9943`)
 
 ## Context
 
@@ -12,7 +13,7 @@ ARK needs a stable, platform-independent vocabulary before runtime, storage, ide
 
 The team also needs reproducible contributor conventions and a baseline CI pipeline without prematurely selecting cryptographic, storage, policy, or platform dependencies.
 
-## Decision proposed
+## Decision
 
 1. Use a Cargo workspace with resolver version 3, Rust edition 2024, and a declared minimum Rust version of 1.85.
 2. Materialize only ark-core initially. Other planned crates are created when they own a concrete, testable responsibility.
@@ -49,7 +50,7 @@ Rejected. Those abstractions belong to subsystem owners and must be reviewed aga
 - Identifier generation must be supplied by an appropriate owner using the approved randomness source; ark-core only wraps a supplied fixed-width value.
 - Persistent and IPC representations remain open until their owning formats define canonical encodings and version rules.
 - The shared error code is intentionally coarse. Subsystems may keep richer internal diagnostics but must sanitize public messages and logs.
-- The crate dependency map remains proposed until reviewed by the owners of crypto, storage, identity, policy, and runtime.
+- The broader crate dependency map remains a planning artifact; this ADR accepts only the workspace/Core foundation and does not approve future subsystem implementations.
 - The minimum Rust version is an explicit compatibility commitment; raising it requires a documented review.
 - The CI workflow validates code quality and cross-platform compilation, not runtime compatibility or security assurance.
 
@@ -62,15 +63,21 @@ Rejected. Those abstractions belong to subsystem owners and must be reviewed aga
 
 ## Validation
 
-Required for this foundation:
+Completed for this foundation:
 - formatting check;
 - workspace build;
 - Clippy with warnings denied;
 - unit tests for identifier representation, domain separation, version domains, and sanitized errors;
-- Windows, Linux, and macOS CI jobs.
+- Windows, Linux, and macOS CI jobs, plus the Rust 1.85 MSRV job and Conventional Commit validation.
 
-Required before this ADR can be marked Accepted:
-- review by the other subsystem owners;
-- confirmation that the proposed crate graph has no ownership or dependency conflicts;
-- review of the public core API and MSRV commitment;
-- successful CI checks on the PR commit set.
+The final PR #2 head was `03336335ae5f87dfc93f70ea56f5448265cb1749`; all recorded GitHub Actions checks passed. Validation was performed by GitHub Actions, not claimed as a local run.
+
+## Decision record — 2026-11-19
+
+ADR-0005 is **Accepted** for the workspace and `ark-core` foundation scope after review of the merged PR #2 implementation and explicit subsystem-owner confirmations.
+
+- **Systems Engineering:** ElmanCod110 — completed the implementation/compatibility cross-check and records the final decision.
+- **Security Validation:** alieliteworks-debug — explicitly approved the technical content, confirmed current Core API sufficiency and the non-overclaiming test boundaries, and requested no speculative Core expansion. Evidence: [PR #2 comment 7012352146](https://github.com/RhinoGuard/ARK/pull/2#issuecomment-7012352146).
+- **Crypto:** ZeroTrace79 — explicitly approved with no requested ADR amendments; confirmed dependency direction, IKM/context and error boundaries, and workspace/MSRV/lint compatibility. Evidence: [Issue #15 comment 7017176050](https://github.com/RhinoGuard/ARK/issues/15#issuecomment-7017176050) and [PR #2 comment 7017190351](https://github.com/RhinoGuard/ARK/pull/2#issuecomment-7017190351).
+
+No owner objection or requested amendment remains for the ADR-0005 Core foundation decision. The confirmations do not constitute approval of PR #3 as a whole, do not close the separate Core-to-Crypto integration contract (E-03 / Issue #17), and do not claim that deferred runtime, storage, identity, authorization, recovery, or platform controls are implemented. The broader crate map and future subsystem contracts remain subject to their own owner reviews and ADRs.
