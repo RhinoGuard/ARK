@@ -5,7 +5,7 @@
 **Baseline:** ADR-0005 / PR #2 foundation branch, current architecture and security documents.  
 **Last updated:** 2026-11-19 (E-04 hardening revision).
 
-> This document is a design and review artifact. It does not claim that the broker, crypto engine, storage engine, identity/session/policy services, filesystem mediation, recovery engine, audit sink, or runtime have been implemented. Only the Core foundation described by PR #2 is implemented on its branch; ADR-0005 itself remains Proposed and PR #2 is not yet merged.
+> This document is a design and review artifact. It does not claim that the broker, crypto engine, storage engine, identity/session/policy services, filesystem mediation, recovery engine, audit sink, or runtime have been implemented. The `ark-core` foundation is implemented on current `main` through PR #2 (merge commit `bafa677d6b42e7b04b736fcc386cd8e4ea4d9943`). ADR-0005 is Accepted for that narrow foundation scope. PR #3 remains open and its KDF work is not part of the current `main` baseline.
 
 ## 1. Purpose and status vocabulary
 
@@ -16,14 +16,16 @@ Every material statement uses one of these status labels:
 - **[IMPLEMENTED]** — present in code on a named branch and supported by inspectable evidence. This label does not imply production security.
 - **[ACCEPTED]** — established by an accepted architecture/security baseline, but not necessarily implemented.
 - **[PROPOSED]** — intended architecture or candidate responsibility that still requires owner review or implementation.
+- **[IN PROGRESS]** — implementation or review is underway on a named branch/PR; it is not yet part of the accepted baseline.
 - **[UNKNOWN]** — insufficiently specified; implementation must not guess.
 
 ### Current baseline
 
 | Area | Status | What can safely be claimed |
 |---|---|---|
-| `ark-core` typed IDs, runtime-mode vocabulary, version types, fixed error taxonomy | [IMPLEMENTED] on `feat/rust-core-foundation`; PR #2 open | Domain vocabulary exists. It is not identity, authorization, persistence, or runtime enforcement. |
-| ADR-0005 | [PROPOSED] | Defines the initial workspace/Core foundation; subsystem-owner approval is still required. |
+| `ark-core` typed IDs, runtime-mode vocabulary, version types, fixed error taxonomy | [IMPLEMENTED] on `main` via PR #2 merge `bafa677` | Domain vocabulary exists. It is not identity, authorization, persistence, or runtime enforcement. |
+| ADR-0005 | [ACCEPTED] for the initial workspace/Core foundation | Acceptance records the workspace and `ark-core` baseline only; it does not approve or implement every future subsystem. |
+| Argon2id/HKDF KDF implementation | [IN PROGRESS] in PR #3 at head `d705efd` | KDF-only work is not merged into `main`; the PR remains subject to API/security review and branch synchronization. |
 | Default deny, least privilege, fail-closed, no path-as-authority | [ACCEPTED] requirements | These are required properties, not proof of enforcement. |
 | Broker, identity verification, sessions, policy engine | [PROPOSED] | Responsibilities are mapped; implementation and concrete APIs are absent. |
 | Cryptographic primitive families | [ACCEPTED] direction | XChaCha20-Poly1305, Argon2id, HKDF-SHA-256, and OS CSPRNG are the selected primitive families; this does not approve a specific crate/version, parameter set, wire format, nonce allocator, or production implementation. |
@@ -397,8 +399,8 @@ The following items are deliberately not resolved by this document. This model m
 
 ### Relationship to existing work
 
-- **ADR-0005 / PR #2:** this document consumes the Core boundary and explicitly avoids treating Core types as security controls. ADR-0005 remains Proposed until subsystem owners review it.
-- **Issue #10 — KDF threat model:** password guessing, Argon2 parameter/resource policy, KDF input contracts, and HKDF domain separation remain in that narrower workstream. This document covers their system-level interfaces and DoS impact only.
+- **ADR-0005 / PR #2:** this document consumes the accepted Core boundary and explicitly avoids treating Core types as security controls. ADR-0005 is Accepted for the initial workspace/Core foundation; it does not make planned subsystems implemented.
+- **Issue #10 — KDF threat model:** password guessing, Argon2 parameter/resource policy, KDF input contracts, and HKDF domain separation are covered by that narrower workstream. This document covers their system-level interfaces and DoS impact only. The KDF implementation and its current API contract remain subject to PR #3 and E-03 review.
 - **Issue #11 — security invariants traceability:** this document identifies system boundaries and owners; the invariant-to-code/test evidence matrix remains the dedicated deliverable for #11.
 - **Issue #12/#13 — adversarial tests and fuzzing:** test cases should be derived from the boundary and failure tables here, but this document does not claim those tests have run.
 - **Recovery design:** preserves three distinct routes: independent per-Workspace Recovery Key, Recovery File as an authenticated wrapper backup (not an independent factor), and Trusted Device using device-specific proof of possession.
