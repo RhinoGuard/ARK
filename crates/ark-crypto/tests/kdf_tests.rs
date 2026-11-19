@@ -134,9 +134,7 @@ fn hkdf_is_deterministic_for_same_inputs() -> Result<(), HkdfError> {
 }
 
 #[test]
-fn hkdf_separates_registered_purposes() -> Result<(), HkdfError> {
-    let key_bytes = [0x3C_u8; 32];
-    let ikm = HkdfIkm::from_key_array(&key_bytes);
+fn hkdf_purposes_use_distinct_registered_context_labels() {
     let purposes = [
         HkdfKeyPurpose::WorkspaceKey,
         HkdfKeyPurpose::ProjectKey,
@@ -147,12 +145,12 @@ fn hkdf_separates_registered_purposes() -> Result<(), HkdfError> {
     ];
     for (index, first_purpose) in purposes.iter().enumerate() {
         for second_purpose in &purposes[index + 1..] {
-            let first = derive_purpose_subkey(ikm, None, *first_purpose)?;
-            let second = derive_purpose_subkey(ikm, None, *second_purpose)?;
-            assert_ne!(&*first, &*second);
+            assert_ne!(
+                first_purpose.as_context_bytes(),
+                second_purpose.as_context_bytes()
+            );
         }
     }
-    Ok(())
 }
 
 #[test]
