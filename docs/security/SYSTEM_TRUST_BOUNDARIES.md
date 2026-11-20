@@ -445,3 +445,12 @@ This section updates only the implementation-status snapshot; it does not change
 The system-level trust boundaries remain **PROPOSED** until the responsible owners accept them and the corresponding components exist. KDF CI and smoke fuzzing do not implement the Broker, Identity, Session, Policy, Storage, Filesystem, Runtime, Recovery, Package, or Audit controls described in this document. The KDF primitive's per-call resource bounds do not supply global admission control for concurrent requests. CSPRNG generation ownership, platform parameter calibration, authenticated wrapper formats, nonce lifecycle, and service-level error mapping remain open engineering decisions.
 
 No branch was merged, no issue was closed, no owner review was submitted, and no repository protection setting was changed by this reconciliation.
+
+
+## 13. Revalidation after hardened Crypto PR creation (2026-11-20)
+
+The hardened Crypto candidate is now Draft PR #28 against main, at head c22acc0474ef067ad90dd5bbced7ed32f9f6d343. Its preceding exact-head CI run failed on compile/lint issues in KAT-only visibility and dead-code scoping; those issues were corrected afterward, but a new CI result for the current head is not yet available.
+
+Security Validation PR #26 remains based on the Crypto branch but is four commits behind the current Crypto head. Its own head 7e9f47393628e605e8d0ff400c579157da52f5bd passed ARK CI #64 (including dependency audit) and bounded KDF fuzz smoke #21. This is valid evidence for that exact staged head only; it is not evidence that the current combined stack is synchronized or green. PR #27 also requires fresh validation after synchronization.
+
+No new trust-boundary implementation is implied. CSPRNG ownership, platform calibration, global Argon2 admission control, service error mapping, key-wrapper format, nonce lifecycle, Storage, Identity, Session, Policy, Broker, Filesystem, Runtime, Recovery and Package controls remain separate open work. The system-level trust-boundary model remains PROPOSED pending owner review and implementation evidence.
