@@ -461,3 +461,41 @@ The follow-up checks have now completed:
 - PR #27 head `df42132afa9e7796bfe82d95bfbbb421c39d8177`: ARK CI run #44637174395 passed **6/6 jobs**, including Windows, macOS, Ubuntu, MSRV 1.85, commit validation, and locked dependency audit. KDF fuzz smoke run #44637174460 also passed on that exact head.
 - E-04 documentation CI run #44776060974 was rechecked after rerunning its previously cancelled macOS job; all five jobs are now successful.
 - Together with PR #28's 6/6 exact-head CI and PR #26's exact-head CI #64 plus fuzz smoke #21, the staged candidate heads each have successful recorded CI/fuzz evidence. This is not a merge approval or Foundation exit acceptance; unresolved CCBs and independent review/governance gates remain.
+
+
+## 2026-11-20 — Final staged-stack synchronization and validation update
+
+This section supersedes the earlier staged-stack snapshot in this roadmap that recorded PR #26 as four commits behind PR #28 and PR #27 as awaiting combined-stack validation.
+
+### Verified ancestry
+
+The complete staged chain is now:
+
+1. **PR #28 — Crypto/KDF:** head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`; ARK CI #44775710932 passed 6/6 jobs.
+2. **PR #26 — Security Validation:** head `52199228ce18a8231b517eed909501d7f65d07ad`. This is a two-parent merge commit preserving previous #26 head `7e9f47393628e605e8d0ff400c579157da52f5bd` and incorporating #28 head as its second parent. Compare #28 → #26: 67 ahead / 0 behind.
+3. **PR #27 — Negative Tests:** head `dd04d4d03f9a915faec8ffc96b356fd01febf68f`. This is a two-parent merge commit preserving previous #27 head `df42132afa9e7796bfe82d95bfbbb421c39d8177` and incorporating updated #26 as its second parent. Compare #26 → #27: 7 ahead / 0 behind; only the two intended test files differ.
+
+The final comparison #28 → #27 is 74 ahead / 0 behind. Tree inspection confirms the final result retains the #28 KDF implementation and CI blobs, #26 validation/fuzz/reconciliation files, and #27's additional negative-test changes. Existing branch commits were not rewritten or discarded.
+
+### Fresh combined merge-result checks
+
+The following PR-triggered runs checked GitHub-generated merge refs (the actual base + PR-head result):
+
+| Layer | GitHub merge ref | ARK CI | Fuzz smoke |
+|---|---|---|---|
+| PR #26 over #28 | `0f15a1ed3ece335d3351f4c83b31e1121eab89f6` | #44803476769 — 6/6 success | #44803476814 — success; 478 Argon2id and 2,632,971 HKDF executions |
+| PR #27 over updated #26 | `53d290ddc5c0e993c1eea1da6c6e57e20ecc86d7` | #44803521073 — 6/6 success | #44803521085 — success; 445 Argon2id and 3,210,071 HKDF executions |
+
+This establishes successful cross-platform CI, locked dependency audit, and bounded fuzz smoke on the synchronized PR merge results. It is not a sustained fuzz campaign, independent security review, or production-readiness certification.
+
+### Remaining exit gates
+
+- CCB-01/06: IKM entropy and provenance contract.
+- CCB-03: CSPRNG, salt, and key-generation ownership.
+- CCB-04: supported-platform Argon2 latency calibration.
+- CCB-05: service-level sanitized error mapping.
+- CCB-07: authenticated persisted KDF metadata and migration.
+- CCB-02: explicit owner acceptance of the six registered HKDF purposes.
+- Independent security/owner review, sustained fuzzing, and repository governance/required-check policy.
+
+**Foundation exit remains NOT APPROVED.** The stack is now ancestry-complete and its fresh PR merge-result checks are green, but the open contract, independent-review, and governance gates still block Foundation acceptance. No PR was merged, no formal approval was submitted, no issue was closed, and no ruleset was changed by this update.
