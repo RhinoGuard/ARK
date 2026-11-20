@@ -231,3 +231,11 @@ PR #28 advanced to head 3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9. ARK CI run #44
 Open contract decisions remain: CCB-01/06 (IKM provenance/source semantics), CCB-03 (CSPRNG and salt/key-generation ownership), CCB-04 (supported-platform Argon2 calibration), CCB-05 (service-level sanitized error mapping), and CCB-07 (authenticated persisted metadata/migration). Bounded fuzz smoke is not a sustained campaign. No system-wide Broker, Identity, Session, Policy, Storage, Filesystem, Runtime, Recovery, Package, or Audit enforcement is claimed.
 
 Foundation exit remains **NOT APPROVED**. These updates record evidence only; they do not constitute owner acceptance, merge approval, issue closure, or a repository ruleset change.
+
+
+## Verification correction — 2026-11-20
+
+The follow-up checks have now completed:
+- PR #27 head `df42132afa9e7796bfe82d95bfbbb421c39d8177`: ARK CI run #44637174395 passed **6/6 jobs**, including Windows, macOS, Ubuntu, MSRV 1.85, commit validation, and locked dependency audit. KDF fuzz smoke run #44637174460 also passed on that exact head.
+- E-04 documentation CI run #44776060974 was rechecked after rerunning its previously cancelled macOS job; all five jobs are now successful.
+- Together with PR #28's 6/6 exact-head CI and PR #26's exact-head CI #64 plus fuzz smoke #21, the staged candidate heads each have successful recorded CI/fuzz evidence. This is not a merge approval or Foundation exit acceptance; unresolved CCBs and independent review/governance gates remain.
