@@ -183,3 +183,16 @@ The original Section 6 statements about `feat/kdf-fuzzing-harness` remain correc
 **PR #2 remains successfully merged and has no blocking defect identified in the audited Core scope. E-02 remains CHANGES REQUIRED for downstream Foundation integration and governance until PR #3 is synchronized and owner-reviewed, PR #26 is reconciled with the Crypto owner branch, E-03/E-04 owner decisions are recorded, and the repository review/CI policy gap is addressed through an explicit administrator decision.**
 
 No issue was closed, no review/approval was submitted, no repository rule was changed, and no branch was merged by this addendum.
+
+
+## 11. Revalidation after hardened Crypto PR creation (2026-11-20)
+
+The current integration plan now uses a three-PR staged candidate rather than the older PR #3 branch:
+
+- PR #28 is the hardened Crypto/KDF candidate against main, currently at c22acc0474ef067ad90dd5bbced7ed32f9f6d343. Its previous CI attempt at b5d0c6ab1c0cab6729a15a03f6c301a803c9a071 failed due to test-only KAT helper visibility/dead-code errors. Those source issues were corrected in later commits, but the latest head still needs a fresh CI run.
+- PR #26 is Security Validation stacked on PR #28. Its head 7e9f47393628e605e8d0ff400c579157da52f5bd passed ARK CI #64, including the dependency audit, and bounded KDF fuzz smoke #21. The PR branch is four commits behind the current PR #28 head; therefore this green evidence is not proof of the current combined stack.
+- PR #27 adds follow-up negative tests on PR #26. Its previous green runs are historical for an earlier base snapshot and must be repeated after synchronization.
+
+The current exact-head PR #28 CI status is pending; do not describe it as passed. The E-03 contract still has open CCB-01/06 provenance/source semantics and CCB-03/04/05/07 platform entropy, calibration, service error mapping, and format metadata/migration decisions. The ruleset approval/status-check gap remains a separate governance issue.
+
+Updated E-02 disposition: PR #2 remains merged and its audited Core scope remains accepted. Downstream Foundation integration remains CHANGES REQUIRED until PR #28 current head passes, PR #26/#27 are synchronized and revalidated, the open E-03 decisions are dispositioned, and E-04/E-05 reviews are recorded. No merge, close, approval, or ruleset change is implied by this addendum.
