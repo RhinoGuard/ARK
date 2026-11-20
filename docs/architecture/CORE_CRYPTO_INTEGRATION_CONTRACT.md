@@ -239,3 +239,21 @@ The follow-up checks have now completed:
 - PR #27 head `df42132afa9e7796bfe82d95bfbbb421c39d8177`: ARK CI run #44637174395 passed **6/6 jobs**, including Windows, macOS, Ubuntu, MSRV 1.85, commit validation, and locked dependency audit. KDF fuzz smoke run #44637174460 also passed on that exact head.
 - E-04 documentation CI run #44776060974 was rechecked after rerunning its previously cancelled macOS job; all five jobs are now successful.
 - Together with PR #28's 6/6 exact-head CI and PR #26's exact-head CI #64 plus fuzz smoke #21, the staged candidate heads each have successful recorded CI/fuzz evidence. This is not a merge approval or Foundation exit acceptance; unresolved CCBs and independent review/governance gates remain.
+
+
+## 2026-11-20 — Superseding synchronized-stack validation record
+
+This section supersedes earlier snapshots stating that PR #26 was behind/diverged from PR #28 or that the combined stack had not yet been validated.
+
+The current staged ancestry is now complete without rewriting prior commits:
+
+- PR #28 hardened Crypto head: `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`; ARK CI #44775710932 passed 6/6.
+- PR #26 Security Validation head: `52199228ce18a8231b517eed909501d7f65d07ad`, a two-parent merge of its previous head `7e9f47393628e605e8d0ff400c579157da52f5bd` and #28 head. Graph comparison: 67 ahead / 0 behind #28.
+- PR #27 negative-test head: `dd04d4d03f9a915faec8ffc96b356fd01febf68f`, a two-parent merge of its previous head `df42132afa9e7796bfe82d95bfbbb421c39d8177` and updated #26. Graph comparison: 7 ahead / 0 behind #26; only the two intended test files differ from #26.
+
+PR-triggered validation tested GitHub's generated merge refs:
+
+- PR #26 merge ref `0f15a1ed3ece335d3351f4c83b31e1121eab89f6`: ARK CI #44803476769 passed 6/6; bounded fuzz smoke #44803476814 passed (478 Argon2id and 2,632,971 HKDF executions).
+- PR #27 merge ref `53d290ddc5c0e993c1eea1da6c6e57e20ecc86d7`: ARK CI #44803521073 passed 6/6; bounded fuzz smoke #44803521085 passed (445 Argon2id and 3,210,071 HKDF executions).
+
+These checks establish successful validation of the staged PR merge results. They do not resolve the contract decisions below: IKM entropy/provenance (CCB-01/06), CSPRNG ownership (CCB-03), supported-platform calibration (CCB-04), service-level sanitized errors (CCB-05), or authenticated persisted KDF metadata/migration (CCB-07). The six registered purposes (CCB-02) still require owner acceptance. This contract remains PROPOSED; no merge, independent approval, or Foundation exit is implied.
