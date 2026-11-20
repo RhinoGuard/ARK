@@ -294,9 +294,7 @@ impl core::fmt::Display for HkdfError {
             }
             Self::EmptyContext => "HKDF context must not be empty",
             Self::ContextTooLong => "HKDF context exceeds the configured limit",
-            Self::InvalidContextFormat => {
-                "HKDF context must match a registered ARK/v1 purpose"
-            }
+            Self::InvalidContextFormat => "HKDF context must match a registered ARK/v1 purpose",
             Self::InvalidOutputLength => {
                 "HKDF output length must be between 1 and 8160 bytes (255 * HashLen)"
             }
