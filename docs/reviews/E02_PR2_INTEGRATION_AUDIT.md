@@ -196,3 +196,8 @@ The current integration plan now uses a three-PR staged candidate rather than th
 The current exact-head PR #28 CI status is pending; do not describe it as passed. The E-03 contract still has open CCB-01/06 provenance/source semantics and CCB-03/04/05/07 platform entropy, calibration, service error mapping, and format metadata/migration decisions. The ruleset approval/status-check gap remains a separate governance issue.
 
 Updated E-02 disposition: PR #2 remains merged and its audited Core scope remains accepted. Downstream Foundation integration remains CHANGES REQUIRED until PR #28 current head passes, PR #26/#27 are synchronized and revalidated, the open E-03 decisions are dispositioned, and E-04/E-05 reviews are recorded. No merge, close, approval, or ruleset change is implied by this addendum.
+
+
+### Latest exact-head check (2026-11-20)
+
+PR #28 advanced to head 3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9. ARK CI run #44775710932 on this exact head has passed Ubuntu, Windows, macOS, Rust 1.85 MSRV, and commit-message validation. The pinned cargo-audit 0.23.0 job is still running; the overall run is not yet green until that job completes. The current PR #26 branch has identical blob contents for the KDF implementation files and the CI workflow, but its commit graph remains four commits behind PR #28; its docs index and fuzz workflow are Security Validation additions. PR #26's earlier CI/audit/fuzz success remains tied to its own exact head, and PR #27 still needs a fresh combined-stack validation. No merge-readiness claim is made.
