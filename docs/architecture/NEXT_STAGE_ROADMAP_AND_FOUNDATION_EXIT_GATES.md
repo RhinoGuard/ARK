@@ -441,3 +441,15 @@ Decision: Foundation exit remains NOT APPROVED. Do not merge any member of the s
 ### Latest exact-head check (2026-11-20)
 
 PR #28 advanced to head 3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9. ARK CI run #44775710932 on this exact head has passed Ubuntu, Windows, macOS, Rust 1.85 MSRV, and commit-message validation. The pinned cargo-audit 0.23.0 job is still running; the overall run is not yet green until that job completes. The current PR #26 branch has identical blob contents for the KDF implementation files and the CI workflow, but its commit graph remains four commits behind PR #28; its docs index and fuzz workflow are Security Validation additions. PR #26's earlier CI/audit/fuzz success remains tied to its own exact head, and PR #27 still needs a fresh combined-stack validation. No merge-readiness claim is made.
+
+
+## Revalidation update — 2026-11-20 (latest verified state)
+
+- Hardened Crypto PR #28 is at `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`. Exact-head ARK CI run #44775710932 completed successfully: **6/6 jobs passed**, including Ubuntu, Windows, macOS, Rust 1.85 MSRV, commit-message validation, and locked dependency audit.
+- Security Validation PR #26 remains at `7e9f47393628e605e8d0ff400c579157da52f5bd`. Its exact-head ARK CI #64 (all six jobs, including dependency audit) and bounded fuzz smoke #21 passed. The relevant KDF implementation blobs and CI workflow match PR #28; its commit graph is behind, so do not confuse graph ancestry with file-content equivalence. The #26 evidence remains scoped to its own exact head.
+- Negative-test follow-up PR #27 is at `df42132afa9e7796bfe82d95bfbbb421c39d8177`. Fresh exact-head validation of the complete #28 → #26 → #27 stack has not yet been established.
+- The E-02, E-03, and E-05 documentation-branch CI runs #44776075855, #44776052015, and #44776066448 completed with all five jobs successful. E-04 run #44776060974 had its macOS job cancelled; that individual job was requested to rerun, and its result must be checked before claiming E-04 CI is fully green.
+
+Open contract decisions remain: CCB-01/06 (IKM provenance/source semantics), CCB-03 (CSPRNG and salt/key-generation ownership), CCB-04 (supported-platform Argon2 calibration), CCB-05 (service-level sanitized error mapping), and CCB-07 (authenticated persisted metadata/migration). Bounded fuzz smoke is not a sustained campaign. No system-wide Broker, Identity, Session, Policy, Storage, Filesystem, Runtime, Recovery, Package, or Audit enforcement is claimed.
+
+Foundation exit remains **NOT APPROVED**. These updates record evidence only; they do not constitute owner acceptance, merge approval, issue closure, or a repository ruleset change.
