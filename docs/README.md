@@ -27,6 +27,13 @@ This documentation is the shared engineering baseline for human contributors and
 - packages/PORTABLE_PACKAGE_FORMAT.md — portable encrypted export/import.
 - recovery/RECOVERY.md — Recovery Key, Recovery File, and Trusted Device.
 
+## Security validation artifacts
+
+- `security/KDF_THREAT_MODEL.md` — KDF threat analysis, including the 2026-11-20 API reconciliation addendum.
+- `reviews/ALI_SECURITY_VALIDATION_RECONCILIATION.md` — evidence-based reconciliation of A-01–A-06 artifacts with the current KDF API; not an owner approval.
+- `reviews/A03_TRACEABILITY_MATRIX_RECONCILIATION.md` — Systems Engineering cross-check of the invariant traceability matrix against the hardened Core/KDF API.
+- `reviews/A06_CURRENT_KDF_REVIEW.md` — current KDF finding-by-finding security reconciliation; not an independent owner approval.
+
 ## Decision status vocabulary
 
 - ACCEPTED: explicitly agreed architectural direction; implementation details may still require validation.

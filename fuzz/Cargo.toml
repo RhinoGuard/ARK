@@ -1,0 +1,28 @@
+[package]
+name = "ark-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+ark-crypto = { path = "../crates/ark-crypto" }
+
+[[bin]]
+name = "fuzz_argon2id"
+path = "fuzz_targets/fuzz_argon2id.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_hkdf"
+path = "fuzz_targets/fuzz_hkdf.rs"
+test = false
+doc = false
+bench = false
