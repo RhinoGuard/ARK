@@ -436,3 +436,8 @@ The following are still mandatory before F0–F5 can be accepted together:
 - The repository ruleset approval/status-check gap remains unchanged and requires a separate administrator decision.
 
 Decision: Foundation exit remains NOT APPROVED. Do not merge any member of the stack until the current heads are synchronized, exact-head checks pass, and the remaining API/contract gates have explicit disposition.
+
+
+### Latest exact-head check (2026-11-20)
+
+PR #28 advanced to head 3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9. ARK CI run #44775710932 on this exact head has passed Ubuntu, Windows, macOS, Rust 1.85 MSRV, and commit-message validation. The pinned cargo-audit 0.23.0 job is still running; the overall run is not yet green until that job completes. The current PR #26 branch has identical blob contents for the KDF implementation files and the CI workflow, but its commit graph remains four commits behind PR #28; its docs index and fuzz workflow are Security Validation additions. PR #26's earlier CI/audit/fuzz success remains tied to its own exact head, and PR #27 still needs a fresh combined-stack validation. No merge-readiness claim is made.
