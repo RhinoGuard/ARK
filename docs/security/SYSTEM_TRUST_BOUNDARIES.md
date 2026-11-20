@@ -479,3 +479,22 @@ The follow-up checks have now completed:
 - PR #27 head `df42132afa9e7796bfe82d95bfbbb421c39d8177`: ARK CI run #44637174395 passed **6/6 jobs**, including Windows, macOS, Ubuntu, MSRV 1.85, commit validation, and locked dependency audit. KDF fuzz smoke run #44637174460 also passed on that exact head.
 - E-04 documentation CI run #44776060974 was rechecked after rerunning its previously cancelled macOS job; all five jobs are now successful.
 - Together with PR #28's 6/6 exact-head CI and PR #26's exact-head CI #64 plus fuzz smoke #21, the staged candidate heads each have successful recorded CI/fuzz evidence. This is not a merge approval or Foundation exit acceptance; unresolved CCBs and independent review/governance gates remain.
+
+
+## 2026-11-20 — Superseding KDF stack synchronization record
+
+This section supersedes earlier statements that the Security Validation branch remained behind the current Crypto branch or that the combined #28 → #26 → #27 stack still needed synchronization and fresh validation.
+
+The staged KDF ancestry is now complete and verified:
+
+- PR #28 Crypto head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`; ARK CI #44775710932 passed 6/6.
+- PR #26 merge head `52199228ce18a8231b517eed909501d7f65d07ad` has previous #26 head `7e9f47393628e605e8d0ff400c579157da52f5bd` and #28 head as parents; graph comparison is 67 ahead / 0 behind.
+- PR #27 merge head `dd04d4d03f9a915faec8ffc96b356fd01febf68f` has previous #27 head `df42132afa9e7796bfe82d95bfbbb421c39d8177` and updated #26 head as parents; graph comparison is 7 ahead / 0 behind. Its only delta against #26 is the two intended negative-test files.
+- The final #28 → #27 comparison is 74 ahead / 0 behind. The final tree preserves the current KDF implementation and CI workflow, the Security Validation/fuzz artifacts, and the negative-test follow-up.
+
+Fresh PR merge-result validation (GitHub-generated merge refs):
+
+- PR #26 merge ref `0f15a1ed3ece335d3351f4c83b31e1121eab89f6`: ARK CI #44803476769 passed 6/6; fuzz smoke #44803476814 passed (478 Argon2id; 2,632,971 HKDF executions).
+- PR #27 merge ref `53d290ddc5c0e993c1eea1da6c6e57e20ecc86d7`: ARK CI #44803521073 passed 6/6; fuzz smoke #44803521085 passed (445 Argon2id; 3,210,071 HKDF executions).
+
+This validation is limited to the KDF candidate and its staged tests. It does not implement or verify Broker, Identity, Session, Policy, Storage, Filesystem, Runtime, Recovery, Package, Audit enforcement, AEAD, nonce lifecycle, or key hierarchy. Independent owner review and the open contract/governance gates remain mandatory. The trust-boundary model remains PROPOSED; no merge or Foundation exit is implied.
