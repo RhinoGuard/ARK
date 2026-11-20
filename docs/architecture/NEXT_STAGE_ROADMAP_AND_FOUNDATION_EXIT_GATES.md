@@ -417,3 +417,22 @@ The following are still mandatory before F0–F5 can be accepted together:
 8. Repository rules still require zero approving reviews and no required status checks. That governance gap remains a separate administrator decision and must be manually enforced meanwhile.
 
 **Decision:** Foundation exit is **not approved** by this roadmap update. The current progress validates selected staged KDF tests and fuzz smoke, not full Foundation integration, owner acceptance, or production security.
+
+
+## 14. Revalidation after hardened Crypto PR creation (2026-11-20)
+
+### Current staged PR stack
+
+1. PR #28 — Crypto/KDF: Draft, based on main, current head c22acc0474ef067ad90dd5bbced7ed32f9f6d343. A prior exact-head CI attempt failed on test-only helper visibility/dead-code issues; source corrections have been committed, but fresh CI for this head is pending.
+2. PR #26 — Security Validation: Draft, based on PR #28, head 7e9f47393628e605e8d0ff400c579157da52f5bd. Its exact-head ARK CI #64 and bounded KDF fuzz smoke #21 passed, including the dependency audit job. However, the branch is four commits behind current PR #28 and must be synchronized and rerun.
+3. PR #27 — Negative-test follow-up: Draft, based on PR #26. Its previous green runs apply to an older stack snapshot; rerun after synchronization.
+
+### Exit-gate impact
+
+- Crypto API boundary: in progress, not accepted until PR #28 current-head CI is green and CCB-01/06 are decided.
+- Security Validation: partially evidenced; exact-head CI/audit/fuzz passed on the older PR #26 head, but the integrated stack is not synchronized.
+- CCB-03/04/05/07 remain open: CSPRNG ownership, platform calibration, service error mapping, and persisted metadata/migration.
+- Bounded fuzz smoke is not a sustained campaign and does not establish cryptographic assurance.
+- The repository ruleset approval/status-check gap remains unchanged and requires a separate administrator decision.
+
+Decision: Foundation exit remains NOT APPROVED. Do not merge any member of the stack until the current heads are synchronized, exact-head checks pass, and the remaining API/contract gates have explicit disposition.
