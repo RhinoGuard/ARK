@@ -454,3 +454,8 @@ The hardened Crypto candidate is now Draft PR #28 against main, at head c22acc04
 Security Validation PR #26 remains based on the Crypto branch but is four commits behind the current Crypto head. Its own head 7e9f47393628e605e8d0ff400c579157da52f5bd passed ARK CI #64 (including dependency audit) and bounded KDF fuzz smoke #21. This is valid evidence for that exact staged head only; it is not evidence that the current combined stack is synchronized or green. PR #27 also requires fresh validation after synchronization.
 
 No new trust-boundary implementation is implied. CSPRNG ownership, platform calibration, global Argon2 admission control, service error mapping, key-wrapper format, nonce lifecycle, Storage, Identity, Session, Policy, Broker, Filesystem, Runtime, Recovery and Package controls remain separate open work. The system-level trust-boundary model remains PROPOSED pending owner review and implementation evidence.
+
+
+### Latest exact-head check (2026-11-20)
+
+PR #28 advanced to head 3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9. ARK CI run #44775710932 on this exact head has passed Ubuntu, Windows, macOS, Rust 1.85 MSRV, and commit-message validation. The pinned cargo-audit 0.23.0 job is still running; the overall run is not yet green until that job completes. The current PR #26 branch has identical blob contents for the KDF implementation files and the CI workflow, but its commit graph remains four commits behind PR #28; its docs index and fuzz workflow are Security Validation additions. PR #26's earlier CI/audit/fuzz success remains tied to its own exact head, and PR #27 still needs a fresh combined-stack validation. No merge-readiness claim is made.
