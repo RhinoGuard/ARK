@@ -201,3 +201,16 @@ The executed test output included 10 Core tests, 6 KDF unit/KAT tests, 8 KDF int
 - Platform and future Storage/Package/Recovery owners: CCB-03 entropy provider ownership and CCB-07 authenticated metadata/migration design.
 
 Until these decisions are reviewed, this document remains **PROPOSED** even though parts of the KDF API and its tests have advanced.
+
+
+## 13. Revalidation after hardened Crypto PR creation (2026-11-20)
+
+The current implementation candidate is now tracked by Draft PR #28 (fix/crypto-kdf-production-api-boundary) against main, currently at head c22acc0474ef067ad90dd5bbced7ed32f9f6d343. PR #28 is the hardened Crypto/KDF candidate; it is distinct from the older PR #3. The current PR #28 head has not yet completed a fresh CI run.
+
+- An earlier CI run on PR #28 head b5d0c6ab1c0cab6729a15a03f6c301a803c9a071 failed because test-only KAT helpers were re-exported at an invalid visibility boundary and then became dead code in non-test builds. The source was corrected by removing those re-exports and applying cfg(test) to the KAT-only validation helper/constant. This correction is at the current head above; it remains pending exact-head CI.
+- PR #26 remains stacked on PR #28 but its head 7e9f47393628e605e8d0ff400c579157da52f5bd is four commits behind the current Crypto branch. Its exact-head ARK CI run #64 passed all six jobs, including dependency audit, and its bounded KDF fuzz smoke #21 passed. These results validate that exact PR #26 head, not the newer PR #28 head or a future rebased PR #26 head.
+- PR #27 previous CI and fuzz successes are for its earlier base snapshot. It must be revalidated after the stack is synchronized.
+
+The API-level disposition remains unchanged: CCB-01/06 are open because HkdfIkm checks length but does not attest source provenance; CCB-03/04/05/07 remain open for CSPRNG ownership, platform calibration, service-level error mapping, and persisted metadata/migration. The six-purpose production context registry is implemented in the candidate but still requires the relevant contract review.
+
+Decision: PR #28 is not yet CI-accepted; PR #26/#27 are not yet synchronized to its current head; this contract remains PROPOSED. Do not infer a completed Crypto integration from the green older staged validation run.
