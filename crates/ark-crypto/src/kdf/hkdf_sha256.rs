@@ -23,6 +23,7 @@ pub const MAX_CONTEXT_LEN: usize = 256;
 
 /// Maximum theoretical output length in bytes for HKDF-SHA-256 (`255 * 32 = 8160` bytes),
 /// per RFC 5869 Section 2.3. Used internally for conformance testing.
+#[cfg(test)]
 pub(super) const HKDF_SHA256_MAX_OUTPUT_LEN: usize = 255 * 32;
 
 /// Enumeration of canonical ARK v1 subkey derivation purposes (`ARK-SEC-016`).
