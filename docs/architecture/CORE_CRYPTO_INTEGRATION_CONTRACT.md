@@ -214,3 +214,8 @@ The current implementation candidate is now tracked by Draft PR #28 (fix/crypto-
 The API-level disposition remains unchanged: CCB-01/06 are open because HkdfIkm checks length but does not attest source provenance; CCB-03/04/05/07 remain open for CSPRNG ownership, platform calibration, service-level error mapping, and persisted metadata/migration. The six-purpose production context registry is implemented in the candidate but still requires the relevant contract review.
 
 Decision: PR #28 is not yet CI-accepted; PR #26/#27 are not yet synchronized to its current head; this contract remains PROPOSED. Do not infer a completed Crypto integration from the green older staged validation run.
+
+
+### Latest exact-head check (2026-11-20)
+
+PR #28 advanced to head 3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9. ARK CI run #44775710932 on this exact head has passed Ubuntu, Windows, macOS, Rust 1.85 MSRV, and commit-message validation. The pinned cargo-audit 0.23.0 job is still running; the overall run is not yet green until that job completes. The current PR #26 branch has identical blob contents for the KDF implementation files and the CI workflow, but its commit graph remains four commits behind PR #28; its docs index and fuzz workflow are Security Validation additions. PR #26's earlier CI/audit/fuzz success remains tied to its own exact head, and PR #27 still needs a fresh combined-stack validation. No merge-readiness claim is made.
