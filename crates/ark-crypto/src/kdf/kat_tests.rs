@@ -329,5 +329,22 @@ fn kdf_boundary_and_error_path_regression_suite() -> Result<(), HkdfError> {
         Err(Argon2Error::InvalidParameters)
     );
 
+    // RFC 9106 requires m >= 8 * p; this is the structural lower bound
+    // exercised by the test-only KAT path (production bounds are stricter).
+    assert_eq!(
+        derive_argon2id_rfc9106_kat(
+            &min_pw,
+            &min_salt,
+            b"",
+            b"",
+            Argon2idConfig {
+                memory_kib: 31,
+                iterations: 1,
+                lanes: 4,
+            }
+        ),
+        Err(Argon2Error::InvalidParameters)
+    );
+
     Ok(())
 }
