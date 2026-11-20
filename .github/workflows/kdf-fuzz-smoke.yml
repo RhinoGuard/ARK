@@ -25,14 +25,14 @@ jobs:
     timeout-minutes: 12
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Install nightly toolchain
         run: |
           rustup toolchain install nightly --profile minimal --component rust-src --component llvm-tools-preview
 
-      - name: Install cargo-fuzz
-        run: cargo install cargo-fuzz --locked
+      - name: Install cargo-fuzz 0.13.2
+        run: cargo +stable install cargo-fuzz --version 0.13.2 --locked
 
       - name: Record Rust and cargo-fuzz versions
         run: |
@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload fuzz artifacts and corpus
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: kdf-fuzz-smoke-${{ github.sha }}
           path: |

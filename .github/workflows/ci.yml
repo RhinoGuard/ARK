@@ -104,8 +104,8 @@ jobs:
           persist-credentials: false
       - name: Install stable Rust
         run: rustup toolchain install stable --profile minimal
-      - name: Install cargo-audit
-        run: cargo +stable install cargo-audit --locked
+      - name: Install cargo-audit 0.23.0
+        run: cargo +stable install cargo-audit --version 0.23.0 --locked
       - name: Record audit toolchain
         run: |
           rustc +stable --version
@@ -117,7 +117,7 @@ jobs:
           cargo +stable audit 2>&1 | tee cargo-audit-report.txt
       - name: Upload audit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: cargo-audit-${{ github.sha }}
           path: cargo-audit-report.txt
