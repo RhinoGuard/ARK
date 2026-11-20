@@ -178,6 +178,7 @@ impl Argon2idConfig {
     /// Validate that this configuration satisfies RFC 9106 structural minimums
     /// and ARK's hard upper DoS ceilings, allowing low-memory official RFC 9106
     /// Known-Answer Test (KAT) vectors (`m >= 8 * p`).
+    #[cfg(test)]
     fn validate_rfc_kat_bounds(&self, associated_data: &[u8]) -> Result<Params, Argon2Error> {
         if self.memory_kib > MAX_MEMORY_KIB
             || !(MIN_ITERATIONS..=MAX_ITERATIONS).contains(&self.iterations)
