@@ -237,6 +237,17 @@ fn kat_ark_v1_project_key_subkey_derivation() -> Result<(), HkdfError> {
     Ok(())
 }
 
+/// Demonstrates that minimum-length validation is not an entropy/provenance check.
+///
+/// An all-zero 16-byte value satisfies the syntactic length wrapper. This is
+/// intentional: the primitive cannot infer where bytes came from or their entropy.
+/// Production callers must enforce approved high-entropy key provenance upstream.
+#[test]
+fn hkdf_ikm_length_validation_does_not_claim_entropy() {
+    let low_entropy_fixture = [0_u8; MIN_IKM_LEN];
+    assert!(HkdfIkm::from_slice(&low_entropy_fixture).is_ok());
+}
+
 /// Comprehensive boundary, output-length, and secret-safe error-path regression tests
 /// covering the finalized `[S-02]`, `[S-03]`, `[S-04]`, and `[S-05]` contracts.
 #[test]
