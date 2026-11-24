@@ -66,7 +66,7 @@ No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rew
 ## Validation and limitations
 
 - The GitHub branch and PR metadata were checked. PR #35 is open, Draft, and targets `fix/crypto-kdf-production-api-boundary`.
-- The branch compare reports 11 commits ahead and 0 behind the PR #28 branch.
+- The branch compare confirms this branch is ahead of PR #28's target and has no behind commits at handoff.
 - No local Rust toolchain was available in the editing environment; `cargo fmt`, `cargo test`, `cargo clippy`, and `cargo bench` were not executed here.
 - No workflow run or benchmark artifact was available at handoff time. Existing historical CI/benchmark results from other PRs are not represented as validation of this branch.
 - The manual calibration workflow must be dispatched and its artifacts reviewed.
