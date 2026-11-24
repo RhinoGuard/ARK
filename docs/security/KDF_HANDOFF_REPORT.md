@@ -67,8 +67,10 @@ No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rew
 
 - The GitHub branch and PR metadata were checked. PR #35 is open, Draft, and targets `fix/crypto-kdf-production-api-boundary`.
 - The branch compare confirms this branch is ahead of PR #28's target and has no behind commits at handoff.
-- No local Rust toolchain was available in the editing environment; `cargo fmt`, `cargo test`, `cargo clippy`, and `cargo bench` were not executed here.
-- No workflow run or benchmark artifact was available at handoff time. Existing historical CI/benchmark results from other PRs are not represented as validation of this branch.
+- No local Rust toolchain was available in the editing environment; `cargo fmt`, `cargo test`, `cargo clippy`, and `cargo bench` were not executed locally.
+- The first PR CI run (#45400384954) reached the Ubuntu formatting step and detected rustfmt differences in the new benchmark and test files. Those formatting differences were corrected in subsequent commits.
+- A completed CI run for the corrected final head was not available at handoff time. The initial failed run is not represented as a passing validation.
+- No benchmark workflow artifact was available at handoff time. Existing historical CI/benchmark results from other PRs are not represented as validation of this branch.
 - The manual calibration workflow must be dispatched and its artifacts reviewed.
 - Independent security review is required under ARK-SEC-032. Reviewer `alieliteworks-debug` has been requested.
 - Issues #5, #6, and #29 remain open pending the outstanding review, CI, and benchmark evidence. They have not been falsely marked complete.
