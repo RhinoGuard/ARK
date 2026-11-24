@@ -29,12 +29,42 @@ struct Profile {
 }
 
 const PROFILES: [Profile; 6] = [
-    Profile { name: "minimum-floor", memory_kib: 16 * 1024, iterations: 1, lanes: 1 },
-    Profile { name: "low-memory", memory_kib: 32 * 1024, iterations: 2, lanes: 1 },
-    Profile { name: "baseline-default", memory_kib: 64 * 1024, iterations: 3, lanes: 1 },
-    Profile { name: "parallel-baseline", memory_kib: 64 * 1024, iterations: 3, lanes: 2 },
-    Profile { name: "high-memory-desktop", memory_kib: 128 * 1024, iterations: 3, lanes: 2 },
-    Profile { name: "upper-policy-profile", memory_kib: 256 * 1024, iterations: 4, lanes: 4 },
+    Profile {
+        name: "minimum-floor",
+        memory_kib: 16 * 1024,
+        iterations: 1,
+        lanes: 1,
+    },
+    Profile {
+        name: "low-memory",
+        memory_kib: 32 * 1024,
+        iterations: 2,
+        lanes: 1,
+    },
+    Profile {
+        name: "baseline-default",
+        memory_kib: 64 * 1024,
+        iterations: 3,
+        lanes: 1,
+    },
+    Profile {
+        name: "parallel-baseline",
+        memory_kib: 64 * 1024,
+        iterations: 3,
+        lanes: 2,
+    },
+    Profile {
+        name: "high-memory-desktop",
+        memory_kib: 128 * 1024,
+        iterations: 3,
+        lanes: 2,
+    },
+    Profile {
+        name: "upper-policy-profile",
+        memory_kib: 256 * 1024,
+        iterations: 4,
+        lanes: 4,
+    },
 ];
 
 fn env_count(name: &str, default: usize) -> usize {
@@ -102,8 +132,15 @@ fn main() {
 
     println!("# ark-crypto Argon2id calibration");
     println!("# warmups={warmups}, samples={samples}");
-    println!("# rustc={}, os={}, arch={}", option_env!("RUSTC_VERSION").unwrap_or("record rustc --version separately"), env::consts::OS, env::consts::ARCH);
-    println!("profile,memory_kib,iterations,lanes,configured_memory_mib,mean_ms,median_ms,p95_ms,min_ms,max_ms");
+    println!(
+        "# rustc={}, os={}, arch={}",
+        option_env!("RUSTC_VERSION").unwrap_or("record rustc --version separately"),
+        env::consts::OS,
+        env::consts::ARCH
+    );
+    println!(
+        "profile,memory_kib,iterations,lanes,configured_memory_mib,mean_ms,median_ms,p95_ms,min_ms,max_ms"
+    );
 
     for profile in PROFILES {
         if let Err(error) = run_profile(profile, warmups, samples) {
