@@ -13,5 +13,9 @@ hkdf = "0.12"
 sha2 = "0.10"
 zeroize = { version = "1.7", features = ["derive"] }
 
+[[bench]]
+name = "argon2id_calibration"
+harness = false
+
 [lints]
 workspace = true
