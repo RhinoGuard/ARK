@@ -22,6 +22,9 @@ This documentation is the shared engineering baseline for human contributors and
 ## Subsystem specifications
 
 - cryptography/CRYPTOGRAPHY.md — cryptographic goals, key hierarchy, chunk requirements, and open design gates.
+- security/ARGON2ID_SECURITY_CONTRACT.md — Argon2id salt lifecycle, input/output contract, parameter bounds, and calibration methodology.
+- security/HKDF_DOMAIN_SEPARATION_CONTRACT.md — HKDF IKM provenance limits and registered ARK/v1 purpose semantics.
+- security/KDF_CONTRACT_GATE_DISPOSITION.md — CCB-01..07 disposition, deferred owners, and PR #3/#28 reconciliation.
 - storage/STORAGE_AND_RECOVERY.md — encrypted storage, working sets, journal, transactions, and crash consistency.
 - runtime/RUNTIME_MODES.md — Development Mode and Execution Mode.
 - packages/PORTABLE_PACKAGE_FORMAT.md — portable encrypted export/import.
