@@ -255,7 +255,10 @@ fn hkdf_registered_purpose_registry_is_stable() -> Result<(), HkdfError> {
     for (purpose, expected_context) in cases {
         let context = HkdfContext::from_purpose(purpose);
         assert_eq!(context.as_bytes(), expected_context);
-        assert_eq!(HkdfContext::parse(expected_context)?.as_bytes(), expected_context);
+        assert_eq!(
+            HkdfContext::parse(expected_context)?.as_bytes(),
+            expected_context
+        );
         derived.push(derive_purpose_subkey(ikm, None, purpose)?);
     }
 
