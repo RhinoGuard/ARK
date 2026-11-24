@@ -17,6 +17,7 @@ This documentation is the shared engineering baseline for human contributors and
 
 - development/DEVELOPER_GUIDE.md — implementation status and engineering sequence.
 - development/TEAM_WORKFLOW.md — ownership and review workflow.
+- development/ENGINEERING_AND_TEAM_PRINCIPLES.md — 18 shared principles for product focus, evidence, engineering quality, ownership, collaboration, and sustainable project stewardship.
 - development/COMMIT_CONVENTIONS.md — commit header and retained-history rules.
 
 ## Subsystem specifications
