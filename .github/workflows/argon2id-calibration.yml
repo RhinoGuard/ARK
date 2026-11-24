@@ -39,8 +39,19 @@ jobs:
             echo "commit=${GITHUB_SHA}"
             echo "runner_os=${RUNNER_OS}"
             echo "runner_arch=${RUNNER_ARCH}"
+            uname -a
             rustc --version
             cargo --version
+            if [[ "${RUNNER_OS}" == "Linux" ]]; then
+              lscpu || true
+              grep -E 'MemTotal|MemAvailable' /proc/meminfo || true
+            elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+              sysctl -n machdep.cpu.brand_string || true
+              sysctl -n hw.logicalcpu || true
+              sysctl -n hw.memsize || true
+            elif [[ "${RUNNER_OS}" == "Windows" ]]; then
+              powershell -NoProfile -Command "Get-CimInstance Win32_Processor | Select-Object -First 1 Name,NumberOfCores,NumberOfLogicalProcessors; Get-CimInstance Win32_ComputerSystem | Select-Object TotalPhysicalMemory"
+            fi
             cargo bench -p ark-crypto --bench argon2id_calibration
           } 2>&1 | tee argon2id-calibration.txt
 
