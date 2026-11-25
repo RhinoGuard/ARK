@@ -237,6 +237,72 @@ fn kat_ark_v1_project_key_subkey_derivation() -> Result<(), HkdfError> {
     Ok(())
 }
 
+/// Locks the exact ARK/v1 bytes and registered semantics for all six HKDF purposes.
+#[test]
+fn hkdf_registered_purpose_registry_is_stable() -> Result<(), HkdfError> {
+    let cases: [(HkdfKeyPurpose, &[u8]); 6] = [
+        (HkdfKeyPurpose::WorkspaceKey, b"ARK/v1/workspace-key"),
+        (HkdfKeyPurpose::ProjectKey, b"ARK/v1/project-key"),
+        (HkdfKeyPurpose::FileKey, b"ARK/v1/file-key"),
+        (HkdfKeyPurpose::MetadataKey, b"ARK/v1/metadata-key"),
+        (HkdfKeyPurpose::AuditKey, b"ARK/v1/audit-key"),
+        (HkdfKeyPurpose::RecoveryKey, b"ARK/v1/recovery-key"),
+    ];
+
+    let root_key = [0x42_u8; KEY_LEN];
+    let ikm = HkdfIkm::from_key_array(&root_key);
+    let mut derived = Vec::with_capacity(cases.len());
+    for (purpose, expected_context) in cases {
+        let context = HkdfContext::from_purpose(purpose);
+        assert_eq!(context.as_bytes(), expected_context);
+        assert_eq!(
+            HkdfContext::parse(expected_context)?.as_bytes(),
+            expected_context
+        );
+        derived.push(derive_purpose_subkey(ikm, None, purpose)?);
+    }
+
+    for left in 0..derived.len() {
+        for right in (left + 1)..derived.len() {
+            assert!(
+                !slices_equal_redacted(derived[left].as_ref(), derived[right].as_ref()),
+                "distinct registered purposes must not share the same test output (bytes redacted)"
+            );
+        }
+    }
+    Ok(())
+}
+
+/// Verifies secret-bearing wrappers do not expose their bytes through Debug.
+#[test]
+fn kdf_secret_wrappers_redact_debug_output() -> Result<(), Argon2Error> {
+    let salt_bytes = [0xA5_u8; MIN_SALT_LEN];
+    let salt = super::Argon2Salt::from_slice(&salt_bytes)?;
+    let salt_debug = format!("{salt:?}");
+    assert!(salt_debug.contains("Argon2Salt"));
+    assert!(salt_debug.contains("len"));
+    assert!(!salt_debug.contains("165"));
+
+    let ikm_bytes = [0xB6_u8; KEY_LEN];
+    let ikm = HkdfIkm::from_key_array(&ikm_bytes);
+    let ikm_debug = format!("{ikm:?}");
+    assert!(ikm_debug.contains("HkdfIkm"));
+    assert!(ikm_debug.contains("len"));
+    assert!(!ikm_debug.contains("182"));
+    Ok(())
+}
+
+/// Demonstrates that minimum-length validation is not an entropy/provenance check.
+///
+/// An all-zero 16-byte value satisfies the syntactic length wrapper. This is
+/// intentional: the primitive cannot infer where bytes came from or their entropy.
+/// Production callers must enforce approved high-entropy key provenance upstream.
+#[test]
+fn hkdf_ikm_length_validation_does_not_claim_entropy() {
+    let low_entropy_fixture = [0_u8; MIN_IKM_LEN];
+    assert!(HkdfIkm::from_slice(&low_entropy_fixture).is_ok());
+}
+
 /// Comprehensive boundary, output-length, and secret-safe error-path regression tests
 /// covering the finalized `[S-02]`, `[S-03]`, `[S-04]`, and `[S-05]` contracts.
 #[test]

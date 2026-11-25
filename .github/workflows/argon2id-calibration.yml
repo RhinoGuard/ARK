@@ -1,0 +1,64 @@
+name: Argon2id calibration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: argon2id-calibration-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  calibration:
+    name: Argon2id calibration (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: stable
+
+      - name: Record environment and run calibration
+        shell: bash
+        env:
+          ARK_BENCH_WARMUPS: "2"
+          ARK_BENCH_SAMPLES: "7"
+        run: |
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "runner_os=${RUNNER_OS}"
+            echo "runner_arch=${RUNNER_ARCH}"
+            uname -a
+            rustc --version
+            cargo --version
+            if [[ "${RUNNER_OS}" == "Linux" ]]; then
+              lscpu || true
+              grep -E 'MemTotal|MemAvailable' /proc/meminfo || true
+            elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+              sysctl -n machdep.cpu.brand_string || true
+              sysctl -n hw.logicalcpu || true
+              sysctl -n hw.memsize || true
+            elif [[ "${RUNNER_OS}" == "Windows" ]]; then
+              powershell -NoProfile -Command "Get-CimInstance Win32_Processor | Select-Object -First 1 Name,NumberOfCores,NumberOfLogicalProcessors; Get-CimInstance Win32_ComputerSystem | Select-Object TotalPhysicalMemory"
+            fi
+            cargo bench -p ark-crypto --bench argon2id_calibration
+          } 2>&1 | tee argon2id-calibration.txt
+
+      - name: Upload raw calibration output
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: argon2id-calibration-${{ matrix.os }}-${{ github.sha }}
+          path: argon2id-calibration.txt
+          if-no-files-found: ignore
