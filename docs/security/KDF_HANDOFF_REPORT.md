@@ -10,11 +10,11 @@
 
 ## Executive summary
 
-The S-07 evidence refresh confirms that PR #35 is the focused KDF follow-up stacked on the selected hardened candidate PR #28. The current PR #35 head `6b52fed41452782cc67a22a950d02411e815cb42` is 17 commits ahead of, and 0 commits behind, PR #28 head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`.
+The S-07 evidence refresh confirms that PR #35 is the focused KDF follow-up stacked on the selected hardened candidate PR #28. The source-code head validated by CI, `6b52fed41452782cc67a22a950d02411e815cb42`, was 17 commits ahead of, and 0 commits behind, PR #28 head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`.
 
 GitHub Actions run [#45400557291](https://github.com/RhinoGuard/ARK/actions/runs/45400557291) completed successfully on the exact PR #35 head. All six jobs passed: commit-message validation, locked dependency audit, Windows checks, Rust 1.85 MSRV checks, macOS checks, and Ubuntu checks. The workflow steps for formatting, workspace build, Clippy, and tests passed on all three operating systems.
 
-This CI result closes the exact-head CI evidence gap recorded in the previous handoff. It does not constitute a benchmark run, independent security audit, Crypto-owner acceptance of the six HKDF purpose semantics, or Foundation exit approval.
+This CI result closes the exact-head CI evidence gap for source head `6b52fed`. Subsequent S-07 commits updated only Markdown handoff/disposition and PR metadata; no CI result is currently visible for the newer documentation-only head, so exact-current-head CI remains pending. It does not constitute a benchmark run, independent security audit, Crypto-owner acceptance of the six HKDF purpose semantics, or Foundation exit approval.
 
 No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rewritten or merged.
 
@@ -65,7 +65,7 @@ No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rew
 
 ## Current GitHub state
 
-- PR #35: open, Ready for Review, base `fix/crypto-kdf-production-api-boundary`, head `6b52fed41452782cc67a22a950d02411e815cb42` at this evidence refresh.
+- PR #35: open, Ready for Review, base `fix/crypto-kdf-production-api-boundary`; consult live PR metadata for the current documentation-only head. The successful CI run below is attached to source head `6b52fed41452782cc67a22a950d02411e815cb42`.
 - PR #28: open, Draft, selected candidate; head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`.
 - PR #26 and PR #27: open, Draft; their staged ancestry remains unchanged.
 - Issue #29: closed as completed.
@@ -74,7 +74,8 @@ No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rew
 
 ## Validation evidence
 
-- Exact-head CI: [Run #45400557291](https://github.com/RhinoGuard/ARK/actions/runs/45400557291) — completed, success, 6/6 jobs.
+- Source-head CI: [Run #45400557291](https://github.com/RhinoGuard/ARK/actions/runs/45400557291) on `6b52fed41452782cc67a22a950d02411e815cb42` — completed, success, 6/6 jobs.
+- The later documentation-only branch head has no visible CI run/status yet; exact-current-head CI remains pending.
 - Windows: formatting, build, Clippy, and tests passed.
 - macOS: formatting, build, Clippy, and tests passed.
 - Ubuntu: formatting, build, Clippy, and tests passed.
