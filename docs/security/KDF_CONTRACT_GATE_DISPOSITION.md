@@ -3,7 +3,7 @@
 - Umbrella work: S-07 / Issue #37; prior coordination: Issues #5, #6, #29.
 - Delivery PR: [#35](https://github.com/RhinoGuard/ARK/pull/35).
 - Branch: `feat/crypto-kdf-contract-gates`, based on PR #28 head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`.
-- Exact-current-head CI success: `87a6c438df5150715d36037b2453a53912f695c6`.
+- CI-validated source/documentation head: `87a6c438df5150715d36037b2453a53912f695c6`; later docs-only refresh commits are not yet CI-validated.
 - Current PR state at S-07 refresh: open, Ready for Review, base `fix/crypto-kdf-production-api-boundary`; not merged.
 - This record is an implementation/evidence disposition, not independent security approval or merge authorization.
 
@@ -69,7 +69,7 @@ This branch does not implement or claim OS CSPRNG salt generation, credential pe
 - [ ] Crypto owner explicitly confirms the CCB-02 six-purpose registry semantics and compatibility contract.
 - [x] Crypto owner confirms the CCB-03 salt-generation ownership split in the E-03 comment on Issue #17.
 - [ ] Independent reviewer approves the KDF API/docs/tests and RNG ownership boundary.
-- [x] CI passes on the exact current PR #35 head `87a6c43` (Run #45645080815, 6/6 jobs).
+- [ ] CI passes on the latest documentation-only PR #35 head. Run #45645080815 passed on `87a6c43` (6/6 jobs), before the final Markdown evidence refresh.
 - [ ] Cross-platform benchmark workflow artifacts are collected and reviewed.
 - [ ] Process peak-memory and representative constrained-hardware/concurrency evidence are collected or explicitly dispositioned.
 - [ ] Issues #31–#34 remain linked as explicit follow-up work.
