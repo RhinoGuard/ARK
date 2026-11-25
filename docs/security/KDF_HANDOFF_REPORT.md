@@ -6,16 +6,15 @@
 **Working branch:** `feat/crypto-kdf-contract-gates`  
 **Integration base:** `fix/crypto-kdf-production-api-boundary` (PR #28 head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`)  
 **Current delivery status:** PR #35 is open and Ready for Review; not merged.  
-**Current PR #35 head:** `87a6c438df5150715d36037b2453a53912f695c6`  
 **Target branch:** PR #28 branch, not `main`.
 
 ## Executive summary
 
 PR #35 is the focused KDF follow-up stacked on the selected hardened candidate PR #28. The source-code head `6b52fed41452782cc67a22a950d02411e815cb42` was 17 commits ahead of, and 0 commits behind, PR #28 head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`. The later S-07 commits changed only Markdown handoff/disposition records and PR metadata.
 
-GitHub Actions run [#45645080815](https://github.com/RhinoGuard/ARK/actions/runs/45645080815) completed successfully on the exact current PR #35 head `87a6c438df5150715d36037b2453a53912f695c6`. All six jobs passed: commit-message validation, locked dependency audit, Windows checks, Rust 1.85 MSRV checks, macOS checks, and Ubuntu checks. Formatting, workspace build, Clippy, and tests passed on Windows, macOS, and Ubuntu; MSRV formatting/build/Clippy/tests also passed.
+GitHub Actions run [#45645080815](https://github.com/RhinoGuard/ARK/actions/runs/45645080815) completed successfully on PR #35 head `87a6c438df5150715d36037b2453a53912f695c6`. Two subsequent commits updated only the Markdown handoff/disposition records; the exact latest documentation-only head has not yet received a CI run. All six jobs passed: commit-message validation, locked dependency audit, Windows checks, Rust 1.85 MSRV checks, macOS checks, and Ubuntu checks. Formatting, workspace build, Clippy, and tests passed on Windows, macOS, and Ubuntu; MSRV formatting/build/Clippy/tests also passed.
 
-This closes the exact-current-head CI evidence gate. It does not constitute a benchmark run, independent security audit, Crypto-owner acceptance of the six HKDF purpose semantics, or Foundation exit approval.
+This validates the source and documentation state at `87a6c43`; CI on the later documentation-only head remains pending. It does not constitute a benchmark run, independent security audit, Crypto-owner acceptance of the six HKDF purpose semantics, or Foundation exit approval.
 
 No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rewritten or merged.
 
@@ -66,7 +65,7 @@ No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rew
 
 ## Current GitHub state
 
-- PR #35: open, Ready for Review, base `fix/crypto-kdf-production-api-boundary`, current head `87a6c438df5150715d36037b2453a53912f695c6`.
+- PR #35: open, Ready for Review, base `fix/crypto-kdf-production-api-boundary`; see live PR metadata for its latest documentation-only head.
 - PR #28: open, Draft, selected candidate; head `3ab35c3acf00d0dbd4df7e14ec0fc199e904a2a9`.
 - PR #26 and PR #27: open, Draft; staged ancestry unchanged.
 - Issue #29: closed as completed.
@@ -75,7 +74,7 @@ No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rew
 
 ## Validation evidence
 
-- Exact-current-head CI: [Run #45645080815](https://github.com/RhinoGuard/ARK/actions/runs/45645080815) on `87a6c438df5150715d36037b2453a53912f695c6` — completed successfully, 6/6 jobs.
+- CI: [Run #45645080815](https://github.com/RhinoGuard/ARK/actions/runs/45645080815) on `87a6c438df5150715d36037b2453a53912f695c6` — completed successfully, 6/6 jobs. The later documentation-only head remains unvalidated.
 - Windows: formatting, workspace build, Clippy, and tests passed.
 - macOS: formatting, workspace build, Clippy, and tests passed.
 - Ubuntu: formatting, workspace build, Clippy, and tests passed.
@@ -98,4 +97,4 @@ No changes were pushed to `main`. PR #28, PR #26, PR #27, and PR #3 were not rew
 
 ## Review recommendation
 
-PR #35 has passing CI on its exact current head and is ready for technical review. S-07 is not complete: benchmark artifacts, six-purpose owner acceptance, and independent security approval remain outstanding. Do not claim Foundation exit or merge readiness until the corresponding evidence and decisions are recorded. Keep PR #28/#26/#27 states and all existing history unchanged.
+PR #35 has passing CI on source head `87a6c43` and is ready for technical review; the later documentation-only head still needs CI. S-07 is not complete: benchmark artifacts, six-purpose owner acceptance, and independent security approval remain outstanding. Do not claim Foundation exit or merge readiness until the corresponding evidence and decisions are recorded. Keep PR #28/#26/#27 states and all existing history unchanged.
