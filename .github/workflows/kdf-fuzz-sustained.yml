@@ -1,0 +1,126 @@
+name: KDF sustained fuzz validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kdf-fuzz-sustained-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sustained-fuzz-argon2id:
+    name: Sustained Argon2id fuzz (30 min, nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install nightly toolchain
+        run: |
+          rustup toolchain install nightly --profile minimal --component rust-src --component llvm-tools-preview
+
+      - name: Install cargo-fuzz 0.13.2
+        run: cargo +stable install cargo-fuzz --version 0.13.2 --locked
+
+      - name: Check fuzz package formatting and compilation
+        run: |
+          cargo fmt --manifest-path fuzz/Cargo.toml --all -- --check
+          cargo +nightly check --manifest-path fuzz/Cargo.toml --bins
+
+      - name: Run 30-minute sustained Argon2id fuzz campaign
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+            echo "=== ENVIRONMENT ==="
+            echo "commit=${GITHUB_SHA}"
+            echo "ref=${GITHUB_REF}"
+            echo "runner_os=${RUNNER_OS}"
+            echo "runner_arch=${RUNNER_ARCH}"
+            uname -a
+            rustc +nightly --version
+            cargo +nightly --version
+            cargo-fuzz --version
+            lscpu | grep -E 'Model name|CPU\(s\):' || true
+            grep -E 'MemTotal|MemAvailable' /proc/meminfo || true
+            echo "=== SEED CORPUS ==="
+            ls -la fuzz/corpus/fuzz_argon2id || true
+            echo "=== FUZZ RUN (max_total_time=1800s) ==="
+            date -u +"start_utc=%Y-%m-%dT%H:%M:%SZ"
+            cargo +nightly fuzz run fuzz_argon2id -- -max_total_time=1800 -rss_limit_mb=1024 -max_len=1152 -timeout=10 -print_final_stats=1
+            date -u +"end_utc=%Y-%m-%dT%H:%M:%SZ"
+          } 2>&1 | tee fuzz-argon2id-sustained.log
+
+      - name: Upload Argon2id sustained fuzz logs and artifacts
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: kdf-fuzz-sustained-argon2id-${{ github.sha }}
+          path: |
+            fuzz-argon2id-sustained.log
+            fuzz/artifacts/fuzz_argon2id/**
+            fuzz/corpus/fuzz_argon2id/**
+          if-no-files-found: ignore
+
+  sustained-fuzz-hkdf:
+    name: Sustained HKDF fuzz (30 min, nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install nightly toolchain
+        run: |
+          rustup toolchain install nightly --profile minimal --component rust-src --component llvm-tools-preview
+
+      - name: Install cargo-fuzz 0.13.2
+        run: cargo +stable install cargo-fuzz --version 0.13.2 --locked
+
+      - name: Check fuzz package formatting and compilation
+        run: |
+          cargo fmt --manifest-path fuzz/Cargo.toml --all -- --check
+          cargo +nightly check --manifest-path fuzz/Cargo.toml --bins
+
+      - name: Run 30-minute sustained HKDF fuzz campaign
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+            echo "=== ENVIRONMENT ==="
+            echo "commit=${GITHUB_SHA}"
+            echo "ref=${GITHUB_REF}"
+            echo "runner_os=${RUNNER_OS}"
+            echo "runner_arch=${RUNNER_ARCH}"
+            uname -a
+            rustc +nightly --version
+            cargo +nightly --version
+            cargo-fuzz --version
+            lscpu | grep -E 'Model name|CPU\(s\):' || true
+            grep -E 'MemTotal|MemAvailable' /proc/meminfo || true
+            echo "=== SEED CORPUS ==="
+            ls -la fuzz/corpus/fuzz_hkdf || true
+            echo "=== FUZZ RUN (max_total_time=1800s) ==="
+            date -u +"start_utc=%Y-%m-%dT%H:%M:%SZ"
+            cargo +nightly fuzz run fuzz_hkdf -- -max_total_time=1800 -rss_limit_mb=1024 -max_len=1152 -timeout=10 -print_final_stats=1
+            date -u +"end_utc=%Y-%m-%dT%H:%M:%SZ"
+          } 2>&1 | tee fuzz-hkdf-sustained.log
+
+      - name: Upload HKDF sustained fuzz logs and artifacts
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: kdf-fuzz-sustained-hkdf-${{ github.sha }}
+          path: |
+            fuzz-hkdf-sustained.log
+            fuzz/artifacts/fuzz_hkdf/**
+            fuzz/corpus/fuzz_hkdf/**
+          if-no-files-found: ignore
