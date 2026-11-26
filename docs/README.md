@@ -33,6 +33,7 @@ This documentation is the shared engineering baseline for human contributors and
 - `reviews/ALI_SECURITY_VALIDATION_RECONCILIATION.md` — evidence-based reconciliation of A-01–A-06 artifacts with the current KDF API; not an owner approval.
 - `reviews/A03_TRACEABILITY_MATRIX_RECONCILIATION.md` — Systems Engineering cross-check of the invariant traceability matrix against the hardened Core/KDF API.
 - `reviews/A06_CURRENT_KDF_REVIEW.md` — current KDF finding-by-finding security reconciliation; not an independent owner approval.
+- `reviews/A07_SECURITY_VALIDATION_REPORT.md` — independent Security Validation report, 30-minute sustained fuzzing evidence, governance audit, and Foundation gate assessment (Issue #30).
 
 ## Decision status vocabulary
 

@@ -1,9 +1,6 @@
 name: KDF sustained fuzz validation
 
 on:
-  push:
-    branches:
-      - "test/a07-sustained-kdf-fuzz"
   workflow_dispatch:
 
 permissions:
